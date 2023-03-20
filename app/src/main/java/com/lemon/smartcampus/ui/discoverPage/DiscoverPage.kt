@@ -17,6 +17,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.discoverPage.tabPage.ResPage
 import com.lemon.smartcampus.ui.discoverPage.tabPage.TopicPage
+import com.lemon.smartcampus.ui.widges.SearchBar
 import com.lemon.smartcampus.ui.widges.TabTitle
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -52,6 +53,8 @@ object TabPage {
 fun DiscoverPage(
     navController: NavController?
 ) {
+    var searchKey by remember { mutableStateOf("") }
+
     var nowSelect by remember { mutableStateOf(0) }
     val pageState = rememberPagerState(0)
 
@@ -71,7 +74,14 @@ fun DiscoverPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(top = 10.dp)
     ) {
+        SearchBar(
+            key = searchKey,
+            onKeyChange = {},
+            onSearch = {},
+            modifier = Modifier.padding(top = 10.dp, start = 20.dp, end = 20.dp)
+        )
         TabTitle(tabList = tabList, nowSelect) {
             nowSelect = it
         }
@@ -110,6 +120,6 @@ fun DiscoverPage(
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
-fun DiscoverPagePreview() {
+private fun DiscoverPagePreview() {
     DiscoverPage(navController = null)
 }

@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.lemon.smartcampus.common.INFO_PAGE
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.common.HOME_PAGE
 import kotlinx.coroutines.delay
@@ -44,7 +43,7 @@ fun CoverPage(
 
 @Composable
 @Preview(showBackground = true, showSystemUi = true)
-fun CoverPagePreview() {
+private fun CoverPagePreview() {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF007AFF)

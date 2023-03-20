@@ -67,11 +67,11 @@ fun TabTitle(
 
 @Composable
 @Preview
-fun TabTitlePreview() {
+private fun TabTitlePreview() {
     TabTitle(tabList = listOf("话题", "资源")) {}
 }
 
-fun Modifier.customTabIndicatorOffset(
+private fun Modifier.customTabIndicatorOffset(
     currentTabPosition: TabPosition,
     percentLength: Float
 ): Modifier = composed(

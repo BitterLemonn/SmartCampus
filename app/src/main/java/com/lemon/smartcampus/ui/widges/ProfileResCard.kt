@@ -97,7 +97,7 @@ fun ProfileResCard(
 
 @Composable
 @Preview
-fun ProfileResCardPreview() {
+private fun ProfileResCardPreview() {
     ProfileResCard(resName = "文件名文件名文件名",
         resSize = 100.0f,
         resLink = "",

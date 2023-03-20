@@ -63,7 +63,7 @@ fun HomePageTitle(
 
 @Composable
 @Preview
-fun HomePageTitlePreview() {
+private fun HomePageTitlePreview() {
     HomePageTitle(title = "广外新闻", titleEn = "News") {
 
     }

@@ -30,11 +30,14 @@ fun NewsCard(
     Card(
         modifier = modifier
             .height(90.dp)
-            .fillMaxWidth()
-            .clickable { onClick.invoke() },
+            .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         elevation = 5.dp,
     ) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { onClick.invoke() })
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -115,7 +118,7 @@ fun NewsCardList(data: List<NewsEntity>, onClick: (Int) -> Unit) {
 
 @Composable
 @Preview
-fun NewsCardPreview() {
+private fun NewsCardPreview() {
 //    NewsCard(title = "“根系广外 绿美校园”128株沉香佳木根植广外") {}
-    NewsCardList(data = listOf()){}
+    NewsCardList(data = listOf()) {}
 }

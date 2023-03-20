@@ -49,7 +49,7 @@ fun ResPage(navController: NavController?, needToTop: Boolean = false, onScrollT
                         nickName = it.nickName,
                         date = it.date,
                         content = it.content,
-                        tag = it.tag,
+                        tag = it.tags,
                         hasRes = true,
                         resCard = {
                             ResCard(

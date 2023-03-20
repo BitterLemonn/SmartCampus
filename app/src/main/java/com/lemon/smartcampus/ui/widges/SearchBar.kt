@@ -78,6 +78,6 @@ fun SearchBar(
 
 @Composable
 @Preview
-fun SearchBarPreview() {
+private fun SearchBarPreview() {
     SearchBar(key = "", onKeyChange = {}) {}
 }

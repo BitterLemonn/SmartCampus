@@ -4,15 +4,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.lemon.smartcampus.ui.discoverPage.DiscoverPage
 import com.lemon.smartcampus.ui.infoPage.InfoPage
+import com.lemon.smartcampus.ui.profilePage.ProfilePage
 import com.lemon.smartcampus.ui.widges.BottomNaviBar
-import com.lemon.smartcampus.ui.widges.SearchBar
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
@@ -21,9 +20,11 @@ object PageList {
     fun getPage(
         index: Int, navController: NavController?
     ): @Composable () -> Unit {
-        if (pageList.isEmpty()) pageList = listOf({ InfoPage(navController = navController) },
+        if (pageList.isEmpty()) pageList = listOf(
+            { InfoPage(navController = navController) },
             { DiscoverPage(navController = navController) },
-            { InfoPage(navController = navController) })
+            { ProfilePage(navController = navController) }
+        )
         return pageList[index]
     }
 }
@@ -33,8 +34,6 @@ object PageList {
 fun HomePage(
     navController: NavController?
 ) {
-    var searchKey by remember { mutableStateOf("") }
-
     var nowSelect by remember { mutableStateOf(0) }
     val pageState = rememberPagerState(0)
 
@@ -51,17 +50,10 @@ fun HomePage(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        SearchBar(
-            key = searchKey,
-            onKeyChange = {},
-            onSearch = {},
-            modifier = Modifier.padding(top = 10.dp, start = 20.dp, end = 20.dp)
-        )
         HorizontalPager(
             count = 3,
             modifier = Modifier
-                .weight(1f)
-                .padding(top = 10.dp),
+                .weight(1f),
             state = pageState
         ) {
             PageList.getPage(it, navController).invoke()
@@ -74,6 +66,6 @@ fun HomePage(
 
 @Composable
 @Preview(showBackground = true)
-fun HomepagePreview() {
+private fun HomepagePreview() {
     HomePage(navController = null)
 }

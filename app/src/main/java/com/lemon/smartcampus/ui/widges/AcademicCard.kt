@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ fun AcademicCardTop(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick.invoke() }
+            .padding(bottom = 5.dp)
     ) {
         if (!onLoad) {
             Text(text = title, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -75,6 +77,7 @@ fun AcademicCardCommon(
         Modifier
             .fillMaxWidth()
             .clickable { onClick.invoke() }
+            .padding(vertical = 5.dp)
     ) {
         Spacer(modifier = Modifier.height(7.dp))
         Row(
@@ -138,41 +141,33 @@ fun AcademicList(
             )
         }
         if (!onLoad)
-            for (item in academicList){
-                item{
-                    AcademicCardCommon(title = item.title, date = item.date) {
-                        onClick.invoke(academicList.indexOf(item))
-                    }
+            items(academicList) { item ->
+                AcademicCardCommon(title = item.title, date = item.date) {
+                    onClick.invoke(academicList.indexOf(item))
                 }
-                item{
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        color = HintGrayDay
-                    )
-                }
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    color = HintGrayDay
+                )
             }
         else
-            for (x in 0..3) {
-                item {
-                    AcademicCardCommon(onLoad = true) {}
-                }
-                item{
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        color = HintGrayDay
-                    )
-                }
+            items(3) {
+                AcademicCardCommon(onLoad = true) {}
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    color = HintGrayDay
+                )
             }
     }
 }
 
 @Composable
 @Preview
-fun AcademicCardPreview() {
+private fun AcademicCardPreview() {
 //    AcademicCardTop(
 //        onLoad = false,
 //        title = "标题标题标题标题标题",

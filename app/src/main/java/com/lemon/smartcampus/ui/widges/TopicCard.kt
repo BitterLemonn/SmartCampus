@@ -119,6 +119,7 @@ fun TopicCard(
                 Spacer(modifier = Modifier.height(7.dp))
                 if (hasRes)
                     resCard.invoke()
+                // 工具栏
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -276,72 +277,104 @@ fun ResCard(
     resType: ResType = ResType.UNKNOWN,
     resSize: Float = 0f,
     resLink: String = "",
-    onDownload: (String) -> Unit,
+    isDownloading: Boolean = false,
+    isCard: Boolean = false,
+    onDownload: (String) -> Unit
+) {
+    if (!isCard)
+        Box(
+            modifier = Modifier
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFFEAEAEA),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = MutableInteractionSource()
+                ) {
+                    onDownload.invoke(resLink)
+                }
+                .padding(horizontal = 13.dp)
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            ResContent(resName, resType, resSize, isDownloading)
+        }
+    else
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 13.dp)
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(10.dp),
+            elevation = 10.dp
+        ) {
+            Box(modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = MutableInteractionSource()
+                ) {
+                    onDownload.invoke(resLink)
+                }) {
+                ResContent(resName, resType, resSize, isDownloading)
+            }
+        }
+}
+
+@Composable
+fun ResContent(
+    resName: String = "",
+    resType: ResType = ResType.UNKNOWN,
+    resSize: Float = 0f,
     isDownloading: Boolean = false
 ) {
-    Box(
-        modifier = Modifier
-            .border(
-                width = 2.dp,
-                color = Color(0xFFEAEAEA),
-                shape = RoundedCornerShape(10.dp)
-            )
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = MutableInteractionSource()
-            ) {
-                onDownload.invoke(resLink)
-            }
-            .padding(horizontal = 13.dp)
-            .fillMaxWidth()
-            .height(50.dp)
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth(0.5f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(0.5f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.offical),
-                    contentDescription = "icon",
-                    modifier = Modifier
-                        .size(35.dp)
-                        .clip(CircleShape)
-                )
-                Spacer(modifier = Modifier.width(15.dp))
-                Text(
-                    text = resName,
-                    color = TextLightDay,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(0.5f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(text = "$resSize MB", color = TextLightDay, fontSize = 12.sp, maxLines = 1)
-                Spacer(modifier = Modifier.width(15.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.download2),
-                    contentDescription = "icon",
-                    modifier = Modifier.size(25.dp)
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.offical),
+                contentDescription = "icon",
+                modifier = Modifier
+                    .size(35.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.width(15.dp))
+            Text(
+                text = resName,
+                color = TextLightDay,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(0.5f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(text = "$resSize MB", color = TextLightDay, fontSize = 12.sp, maxLines = 1)
+            Spacer(modifier = Modifier.width(15.dp))
+            Image(
+                painter = painterResource(id = R.drawable.download2),
+                contentDescription = "icon",
+                modifier = Modifier.size(25.dp)
+            )
         }
     }
 }
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
-fun CardPreview() {
+private fun CardPreview() {
     TopicCard(isLoading = true,
         iconUrl = "",
         nickName = "昵称昵称昵称昵称昵称",

@@ -1,5 +1,6 @@
 package com.lemon.smartcampus.ui.widges
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,12 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.lemon.smartcampus.R
 
 @Composable
 fun ProfileCard(
@@ -51,7 +54,7 @@ fun ProfileCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = nickname,
+                    text = nickname.ifBlank { "您还未登录哦~" },
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -81,19 +84,28 @@ fun ProfileCard(
                 .clickable(
                     interactionSource = MutableInteractionSource(), indication = rememberRipple()
                 ) { onChangeArthur.invoke() }) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(iconUrl).build(),
-                contentDescription = "icon",
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-            )
+            if (iconUrl.isBlank())
+                Image(
+                    painter = painterResource(id = R.drawable.cat_logo),
+                    contentDescription = "icon",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                )
+            else
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current).data(iconUrl).build(),
+                    contentDescription = "icon",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                )
         }
     }
 }
 
 @Composable
 @Preview
-fun ProfileCardPreview() {
+private fun ProfileCardPreview() {
     ProfileCard("", "昵称昵称昵称", listOf("软件工程", "2019级"), onEdit = {}, onChangeArthur = {})
 }

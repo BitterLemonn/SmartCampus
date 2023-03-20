@@ -12,7 +12,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,37 +29,41 @@ fun ProfileBtn(
 ) {
     Card(
         modifier = Modifier
-            .width(144.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = MutableInteractionSource(),
-                onClick = onClick
-            ),
+            .width(144.dp),
         elevation = 10.dp,
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 18.dp)
-                .padding(start = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = img),
-                contentDescription = text,
-                modifier = Modifier.size(25.dp)
-            )
-            Spacer(modifier = Modifier.width(13.dp))
-            Text(text = text, fontSize = 14.sp, color = TextDarkDay)
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = MutableInteractionSource(),
+                    onClick = onClick
+                )
+        ){
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 18.dp)
+                    .padding(start = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = img),
+                    contentDescription = text,
+                    modifier = Modifier.size(25.dp)
+                )
+                Spacer(modifier = Modifier.width(13.dp))
+                Text(text = text, fontSize = 14.sp, color = TextDarkDay)
+            }
         }
     }
 }
 
 @Composable
 @Preview
-fun ProfileBtnPreview() {
+private fun ProfileBtnPreview() {
     ProfileBtn(img = R.drawable.calendar2, text = "我的课程", backgroundColor = Color(0xFFFFF3D8)) {}
 }

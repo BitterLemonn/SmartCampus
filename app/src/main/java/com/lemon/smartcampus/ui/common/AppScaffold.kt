@@ -14,11 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.lemon.smartcampus.common.COVER_PAGE
-import com.lemon.smartcampus.common.INFO_PAGE
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.lemon.smartcampus.common.AUTH_PAGE
+import com.lemon.smartcampus.common.COVER_PAGE
 import com.lemon.smartcampus.common.HOME_PAGE
-import com.lemon.smartcampus.ui.infoPage.InfoPage
+import com.lemon.smartcampus.ui.authPage.AuthPage
 import com.lemon.smartcampus.ui.coverPage.CoverPage
 import com.lemon.smartcampus.ui.homePage.HomePage
 import com.lemon.smartcampus.ui.theme.HintGrayDay
@@ -61,6 +61,16 @@ fun AppScaffold() {
                     darkIcons = MaterialTheme.colors.isLight
                 )
                 HomePage(navController = navController)
+            }
+            composable(route = AUTH_PAGE) {
+                rememberSystemUiController().setNavigationBarColor(
+                    Color(0xFFFAFAFA), darkIcons = MaterialTheme.colors.isLight
+                )
+                rememberSystemUiController().setSystemBarsColor(
+                    HintGrayDay,
+                    darkIcons = MaterialTheme.colors.isLight
+                )
+                AuthPage(navController = navController)
             }
         }
     }

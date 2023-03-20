@@ -71,7 +71,7 @@ fun TopicPage(navController: NavController?) {
                         nickName = it.nickName,
                         date = it.date,
                         content = it.content,
-                        tag = it.tag
+                        tag = it.tags
                     ) { // onClick
 
                     }
@@ -100,6 +100,6 @@ fun TopicPage(navController: NavController?) {
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
-fun TopicPagePreview() {
+private fun TopicPagePreview() {
     TopicPage(navController = null)
 }

@@ -51,7 +51,7 @@ fun HomePageIBtn(
 
 @Composable
 @Preview
-fun HomePageIBtnPreview() {
+private fun HomePageIBtnPreview() {
     HomePageIBtn(icon = R.drawable.building, text = "学校概况") {
 
     }

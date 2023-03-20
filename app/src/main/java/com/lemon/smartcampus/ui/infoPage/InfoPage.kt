@@ -18,60 +18,70 @@ import com.lemon.smartcampus.ui.widges.*
 fun InfoPage(
     navController: NavController?
 ) {
+    var searchKey by remember { mutableStateOf("") }
+
     val scrollState = rememberScrollState()
     val newsList = remember { mutableStateListOf<NewsEntity>() }
     val academicList = remember { mutableStateListOf<AcademicEntity>() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+    Column(modifier = Modifier.fillMaxSize().padding(top = 10.dp)) {
+        SearchBar(
+            key = searchKey,
+            onKeyChange = {},
+            onSearch = {},
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            HomePageIBtn(icon = R.drawable.building, text = "学校概况") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HomePageIBtn(icon = R.drawable.building, text = "学校概况") {
+
+                }
+                HomePageIBtn(icon = R.drawable.medal, text = "广外人物") {
+
+                }
+                HomePageIBtn(icon = R.drawable.calendar, text = "最新校历") {
+
+                }
+                HomePageIBtn(icon = R.drawable.offical, text = "学校官网") {
+
+                }
+            }
+            Spacer(modifier = Modifier.height(18.dp))
+            HomePageTitle(title = "广外新闻", titleEn = "News") {
 
             }
-            HomePageIBtn(icon = R.drawable.medal, text = "广外人物") {
+            NewsCardList(data = newsList) {
 
             }
-            HomePageIBtn(icon = R.drawable.calendar, text = "最新校历") {
+            Spacer(modifier = Modifier.height(12.dp))
+            HomePageTitle(title = "学术研究", titleEn = "Academic") {
 
             }
-            HomePageIBtn(icon = R.drawable.offical, text = "学校官网") {
-
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(modifier = Modifier.weight(1f)) {
+                AcademicList(
+                    onLoad = academicList.isEmpty(),
+                    academicList = academicList,
+                    onClick = {},
+                    onClickTop = {}
+                )
             }
-        }
-        Spacer(modifier = Modifier.height(18.dp))
-        HomePageTitle(title = "广外新闻", titleEn = "News") {
-
-        }
-        NewsCardList(data = newsList) {
-
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        HomePageTitle(title = "学术研究", titleEn = "Academic") {
-
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            AcademicList(
-                onLoad = academicList.isEmpty(),
-                academicList = academicList,
-                onClick = {},
-                onClickTop = {}
-            )
         }
     }
 }
 
 @Composable
 @Preview(showBackground = true)
-fun InfoPagePreview() {
+private fun InfoPagePreview() {
     InfoPage(navController = null)
 }

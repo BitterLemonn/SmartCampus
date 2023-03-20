@@ -110,6 +110,6 @@ fun BottomNaviBar(
 
 @Composable
 @Preview
-fun BottomNaviItemPreview() {
+private fun BottomNaviItemPreview() {
     BottomNaviBar {}
 }

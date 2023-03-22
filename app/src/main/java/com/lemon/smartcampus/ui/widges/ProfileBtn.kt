@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.TextDarkDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun ProfileBtn(
@@ -42,7 +42,7 @@ fun ProfileBtn(
                     interactionSource = MutableInteractionSource(),
                     onClick = onClick
                 )
-        ){
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -56,7 +56,7 @@ fun ProfileBtn(
                     modifier = Modifier.size(25.dp)
                 )
                 Spacer(modifier = Modifier.width(13.dp))
-                Text(text = text, fontSize = 14.sp, color = TextDarkDay)
+                Text(text = text, fontSize = 14.sp, color = AppTheme.colors.textDarkColor)
             }
         }
     }

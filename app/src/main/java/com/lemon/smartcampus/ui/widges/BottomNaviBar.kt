@@ -1,14 +1,11 @@
 package com.lemon.smartcampus.ui.widges
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -20,8 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun BottomNaviItem(
@@ -30,6 +26,7 @@ fun BottomNaviItem(
     isSelected: Boolean = false,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Box {
         Column(
             modifier = Modifier
@@ -48,23 +45,23 @@ fun BottomNaviItem(
                 contentDescription = text,
                 modifier = Modifier.size(30.dp)
             )
-            Text(text = text, color = TextLightDay, fontSize = 12.sp)
+            Text(text = text, color = AppTheme.colors.textLightColor, fontSize = 12.sp)
         }
         if (isSelected)
             Canvas(modifier = Modifier.size(25.dp)) {
                 val height = size.height
                 drawCircle(
-                    color = Color(0xFFB9DFFF),
+                    color = if (!isDarkMode) Color(0xFFB9DFFF) else Color(0xFF3A4752),
                     radius = height / 2.0f,
                     center = this.center.plus(Offset(20.dp.toPx(), 2.dp.toPx())),
-                    blendMode = BlendMode.Multiply,
+                    blendMode = if (!isDarkMode) BlendMode.Multiply else BlendMode.Exclusion,
                 )
                 drawCircle(
-                    color = Color(0xFFB9DFFF),
+                    color = if (!isDarkMode) Color(0xFFB9DFFF) else Color(0xFF3A4752),
                     radius = height / 2.0f,
                     center = this.center.plus(Offset(20.dp.toPx(), 2.dp.toPx())),
                     style = Stroke(width = 2f),
-                    blendMode = BlendMode.Multiply,
+                    blendMode = if (!isDarkMode) BlendMode.Multiply else BlendMode.Exclusion,
                 )
             }
     }
@@ -78,7 +75,7 @@ fun BottomNaviBar(
 ) {
     Row(
         modifier = modifier
-            .background(HintGrayDay)
+            .background(if (isSystemInDarkTheme()) AppTheme.colors.textDarkColor else Color.White)
             .fillMaxWidth()
             .height(54.dp),
         verticalAlignment = Alignment.CenterVertically,

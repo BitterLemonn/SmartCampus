@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.lemon.smartcampus.data.entities.CommentEntity
-import com.lemon.smartcampus.data.entities.TopicEntity
-import com.lemon.smartcampus.data.globalData.ProfileInfo
+import com.lemon.smartcampus.data.database.entities.CommentEntity
+import com.lemon.smartcampus.data.database.entities.TopicEntity
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.widges.*
 
 @Composable
@@ -58,7 +58,7 @@ fun TopicDetailPage(navController: NavController?) {
         }, onTouch = { isTouchOutSide = false })
     }
 
-    if (host.userID == ProfileInfo.profile?.id && host.userID.isNotBlank())
+    if (host.userID == AppContext.profile?.id && host.userID.isNotBlank())
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
             MoreActionCard(listOf(ActionPair("删除话题") {
                 // TODO 删除

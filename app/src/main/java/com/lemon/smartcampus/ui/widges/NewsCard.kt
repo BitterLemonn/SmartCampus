@@ -2,6 +2,7 @@ package com.lemon.smartcampus.ui.widges
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,8 +16,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lemon.smartcampus.data.entities.NewsEntity
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.data.database.entities.NewsEntity
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun NewsCard(
@@ -33,6 +34,7 @@ fun NewsCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         elevation = 5.dp,
+        backgroundColor = AppTheme.colors.card
     ) {
         Box(modifier = Modifier
             .fillMaxSize()
@@ -49,7 +51,7 @@ fun NewsCard(
                         .width(100.dp)
                         .height(64.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(Color(0xFFC4C4C4)),
+                        .background(AppTheme.colors.hintDarkColor),
                 )
             } else {
                 // TODO
@@ -66,13 +68,13 @@ fun NewsCard(
                         modifier = Modifier
                             .width(200.dp)
                             .height(18.dp)
-                            .background(Color(0xFFDADADA)),
+                            .background(AppTheme.colors.hintDarkColor),
                     )
                     Box(
                         modifier = Modifier
                             .width(100.dp)
                             .height(18.dp)
-                            .background(Color(0xFFEAEAEA)),
+                            .background(AppTheme.colors.hintLightColor),
                     )
                 } else {
                     Text(
@@ -84,7 +86,7 @@ fun NewsCard(
                     Text(
                         text = date,
                         fontSize = 12.sp,
-                        color = TextLightDay,
+                        color = AppTheme.colors.textLightColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

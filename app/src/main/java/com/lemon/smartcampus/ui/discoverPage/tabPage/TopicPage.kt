@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.data.entities.TopicEntity
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.data.database.entities.TopicEntity
+import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.LazyLoadMoreColumn
 import com.lemon.smartcampus.ui.widges.TopicCard
 import kotlinx.coroutines.flow.collect
@@ -43,7 +43,7 @@ fun TopicPage(navController: NavController?) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "还没有人发布话题哦,快和大家聊聊吧~", color = TextLightDay, fontSize = 16.sp
+            text = "还没有人发布话题哦,快和大家聊聊吧~", color = AppTheme.colors.textLightColor, fontSize = 16.sp
         )
     }
     else LazyLoadMoreColumn(loadState = loadState, onLoad = { /*TODO*/ }) {

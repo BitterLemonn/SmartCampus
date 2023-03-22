@@ -3,6 +3,7 @@ package com.lemon.smartcampus.ui.widges
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
@@ -15,8 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun HomePageTitle(
@@ -41,23 +41,29 @@ fun HomePageTitle(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            Text(text = title, fontSize = 18.sp, color = Color.Black)
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                color = AppTheme.colors.textBlackColor
+            )
             Text(
                 text = titleEn,
                 fontSize = 12.sp,
-                color = TextLightDay,
+                color = AppTheme.colors.textLightColor,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 10.dp)
             )
-            Text(text = "more", fontSize = 12.sp, color = TextLightDay)
+            Text(text = "more", fontSize = 12.sp, color = AppTheme.colors.textLightColor)
             Image(
                 painter = painterResource(id = R.drawable.right_more),
                 contentDescription = "more",
-                modifier = Modifier.size(12.dp).padding(bottom = 1.dp)
+                modifier = Modifier
+                    .size(12.dp)
+                    .padding(bottom = 1.dp)
             )
         }
-        Divider(color = HintGrayDay, modifier = Modifier.fillMaxWidth())
+        Divider(color = AppTheme.colors.hintLightColor, modifier = Modifier.fillMaxWidth())
     }
 }
 

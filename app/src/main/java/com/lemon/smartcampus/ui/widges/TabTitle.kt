@@ -17,8 +17,7 @@ import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.SchoolBlueDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun TabTitle(
@@ -39,7 +38,7 @@ fun TabTitle(
                         .customTabIndicatorOffset(it[nowSelect], 0.4f)
                         .width(10.dp)
                         .clip(RoundedCornerShape(1.dp)),
-                    color = SchoolBlueDay,
+                    color = AppTheme.colors.schoolBlue,
                     height = 2.dp
                 )
             }
@@ -52,6 +51,7 @@ fun TabTitle(
                     },
                     text = {
                         Text(
+                            color = AppTheme.colors.textBlackColor,
                             text = title,
                             fontSize = 16.sp,
                             modifier = Modifier.defaultMinSize(minWidth = 40.dp)
@@ -61,7 +61,11 @@ fun TabTitle(
                 )
             }
         }
-        Divider(thickness = 1.dp, color = HintGrayDay, modifier = Modifier.fillMaxWidth())
+        Divider(
+            thickness = 1.dp,
+            color = AppTheme.colors.hintLightColor,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

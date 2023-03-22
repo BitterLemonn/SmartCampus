@@ -10,8 +10,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.data.entities.AcademicEntity
-import com.lemon.smartcampus.data.entities.NewsEntity
+import com.lemon.smartcampus.data.database.entities.AcademicEntity
+import com.lemon.smartcampus.data.database.entities.NewsEntity
 import com.lemon.smartcampus.ui.widges.*
 
 @Composable

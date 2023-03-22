@@ -1,9 +1,6 @@
 package com.lemon.smartcampus.ui.widges
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -26,10 +23,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.HintDarkDay
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.TextDarkDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 enum class ResType {
     TXT, DOC, XLS, PPT, PSD, PNG, PDF, UNKNOWN
@@ -52,7 +46,7 @@ fun TopicCard(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .heightIn(max = if (!hasRes) 160.dp else 240.dp),
-        backgroundColor = Color.White,
+        backgroundColor = if (!isSystemInDarkTheme()) Color.White else Color(0xFF2A2A2A),
         elevation = 10.dp,
         shape = RoundedCornerShape(10.dp)
     ) {
@@ -92,14 +86,14 @@ fun TopicCard(
                     ) {
                         Text(
                             text = nickName,
-                            color = TextLightDay,
+                            color = AppTheme.colors.textLightColor,
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = date,
-                            color = TextLightDay,
+                            color = AppTheme.colors.textLightColor,
                             fontSize = 10.sp
                         )
                     }
@@ -108,7 +102,7 @@ fun TopicCard(
                 Spacer(modifier = Modifier.height(7.dp))
                 Text(
                     text = content,
-                    color = TextDarkDay,
+                    color = AppTheme.colors.textDarkColor,
                     maxLines = 3,
                     fontSize = 14.sp,
                     overflow = TextOverflow.Ellipsis,
@@ -138,7 +132,7 @@ fun TopicCard(
                         tag.forEach {
                             Text(
                                 text = "#$it",
-                                color = TextLightDay,
+                                color = AppTheme.colors.textLightColor,
                                 fontSize = 12.sp
                             )
                         }
@@ -150,7 +144,7 @@ fun TopicCard(
                     ) {
                         Text(
                             text = "$commentCount",
-                            color = TextLightDay,
+                            color = AppTheme.colors.textLightColor,
                             fontSize = 12.sp
                         )
                         Image(
@@ -178,7 +172,7 @@ fun TopicCardPlaceHolder() {
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(5.dp))
-                .background(HintDarkDay)
+                .background(AppTheme.colors.hintDarkColor)
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(
@@ -189,13 +183,13 @@ fun TopicCardPlaceHolder() {
                 modifier = Modifier
                     .width(100.dp)
                     .height(18.dp)
-                    .background(TextLightDay)
+                    .background(AppTheme.colors.textLightColor)
             )
             Box(
                 modifier = Modifier
                     .width(50.dp)
                     .height(12.dp)
-                    .background(HintGrayDay)
+                    .background(AppTheme.colors.hintLightColor)
             )
         }
     }
@@ -210,19 +204,19 @@ fun TopicCardPlaceHolder() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(12.dp)
-                .background(TextDarkDay)
+                .background(AppTheme.colors.textDarkColor)
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(12.dp)
-                .background(TextDarkDay)
+                .background(AppTheme.colors.textDarkColor)
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .height(12.dp)
-                .background(TextDarkDay)
+                .background(AppTheme.colors.textDarkColor)
         )
     }
     // 模拟工具栏
@@ -247,7 +241,7 @@ fun TopicCardPlaceHolder() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(12.dp)
-                    .background(HintGrayDay)
+                    .background(AppTheme.colors.hintLightColor)
             )
         }
         // 模拟评论
@@ -260,7 +254,7 @@ fun TopicCardPlaceHolder() {
                 modifier = Modifier
                     .width(30.dp)
                     .height(12.dp)
-                    .background(HintGrayDay)
+                    .background(AppTheme.colors.hintLightColor)
             )
             Image(
                 painter = painterResource(id = R.drawable.message),
@@ -286,7 +280,7 @@ fun ResCard(
             modifier = Modifier
                 .border(
                     width = 2.dp,
-                    color = Color(0xFFEAEAEA),
+                    color = if (!isSystemInDarkTheme()) Color(0xFFEAEAEA) else Color(0xFF2A2A2A),
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clip(RoundedCornerShape(10.dp))
@@ -350,7 +344,7 @@ fun ResContent(
             Spacer(modifier = Modifier.width(15.dp))
             Text(
                 text = resName,
-                color = TextLightDay,
+                color = AppTheme.colors.textLightColor,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -361,7 +355,12 @@ fun ResContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-            Text(text = "$resSize MB", color = TextLightDay, fontSize = 12.sp, maxLines = 1)
+            Text(
+                text = "$resSize MB",
+                color = AppTheme.colors.textLightColor,
+                fontSize = 12.sp,
+                maxLines = 1
+            )
             Spacer(modifier = Modifier.width(15.dp))
             Image(
                 painter = painterResource(id = R.drawable.download2),

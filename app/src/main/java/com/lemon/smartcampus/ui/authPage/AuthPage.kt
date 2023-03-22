@@ -1,11 +1,13 @@
 package com.lemon.smartcampus.ui.authPage
 
+import android.app.Activity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,10 +15,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -28,16 +33,56 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.SchoolBlueDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
+import com.lemon.smartcampus.ui.widges.SNACK_ERROR
+import com.lemon.smartcampus.ui.widges.WarpLoadingDialog
+import com.lemon.smartcampus.ui.widges.popupSnackBar
+import com.lemon.smartcampus.utils.HOME_PAGE
+import com.lemon.smartcampus.viewModel.auth.AuthViewAction
+import com.lemon.smartcampus.viewModel.auth.AuthViewEvent
+import com.lemon.smartcampus.viewModel.auth.AuthViewModel
+import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.delay
 
 @Composable
-fun AuthPage(navController: NavController?) {
-    var phoneNum by remember { mutableStateOf("") }
-    var token by remember { mutableStateOf("") }
-    var check by remember { mutableStateOf("") }
+fun AuthPage(
+    navController: NavController?,
+    scaffoldState: ScaffoldState?,
+    viewModel: AuthViewModel = viewModel()
+) {
+    val viewStates = viewModel.viewStates
+    val state by viewStates.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var needWait by rememberSaveable { mutableStateOf(0) }
+    var onLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.viewEvents.observeEvent(lifecycleOwner) {
+            when (it) {
+                is AuthViewEvent.TransIntent -> navController?.popBackStack()
+                is AuthViewEvent.ShowToast -> {
+                    scaffoldState?.let { scaffoldState ->
+                        popupSnackBar(coroutineScope, scaffoldState, SNACK_ERROR, it.msg)
+                    }
+                }
+                is AuthViewEvent.AlreadyRequestCode -> needWait = 120
+                is AuthViewEvent.ShowLoadingDialog -> onLoading = true
+                is AuthViewEvent.DismissLoadingDialog -> onLoading = false
+            }
+        }
+    }
+    LaunchedEffect(key1 = needWait) {
+        if (needWait > 0) {
+            delay(1_000)
+            needWait -= 1
+        }
+    }
 
     var passwordMode by remember { mutableStateOf(true) }
     var registerMode by remember { mutableStateOf(false) }
@@ -48,21 +93,20 @@ fun AuthPage(navController: NavController?) {
     val animateSpacerHeight by animateDpAsState(targetValue = if (!registerMode) 0.dp else 20.dp)
 
     LaunchedEffect(key1 = passwordMode) {
-        token = ""
+        viewModel.dispatch(AuthViewAction.UpdateToken(""))
+        viewModel.dispatch(AuthViewAction.UpdatePassword(""))
     }
 
     LaunchedEffect(key1 = registerMode) {
         passwordMode = !registerMode
-        check = ""
+        viewModel.dispatch(AuthViewAction.UpdatePassword(""))
     }
 
     Box(modifier = Modifier.padding(start = 20.dp, top = 20.dp)) {
         Image(painter = painterResource(id = R.drawable.back),
             contentDescription = "back",
             modifier = Modifier
-                .clip(
-                    CircleShape
-                )
+                .clip(CircleShape)
                 .clickable(
                     indication = rememberRipple(),
                     interactionSource = MutableInteractionSource(),
@@ -89,10 +133,15 @@ fun AuthPage(navController: NavController?) {
                 .fillMaxWidth(0.8f)
                 .wrapContentHeight(),
             elevation = 10.dp,
-            shape = RoundedCornerShape(5.dp)
+            shape = RoundedCornerShape(5.dp),
+            backgroundColor = AppTheme.colors.card
         ) {
             Column {
-                Divider(color = SchoolBlueDay, modifier = Modifier.fillMaxWidth(), thickness = 1.dp)
+                Divider(
+                    color = AppTheme.colors.schoolBlue,
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -105,7 +154,8 @@ fun AuthPage(navController: NavController?) {
                     ) {
                         Text(
                             text = "登录",
-                            color = SchoolBlueDay,
+                            color = if (!isSystemInDarkTheme()) AppTheme.colors.schoolBlue
+                            else Color(0xFFEAEAEA),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -127,14 +177,18 @@ fun AuthPage(navController: NavController?) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // 手机号
-                    OutlinedTextField(value = phoneNum,
-                        onValueChange = { if (it.length <= 11) phoneNum = it },
+                    OutlinedTextField(value = state.phone,
+                        onValueChange = {
+                            if (it.length <= 11) viewModel.dispatch(AuthViewAction.UpdatePhone(it))
+                        },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            backgroundColor = Color.White,
-                            cursorColor = SchoolBlueDay,
-                            unfocusedBorderColor = TextLightDay,
-                            focusedBorderColor = SchoolBlueDay,
-                            focusedLabelColor = SchoolBlueDay
+                            backgroundColor = if (!isSystemInDarkTheme()) Color.White
+                            else Color(0xFF2F2F2F),
+                            cursorColor = AppTheme.colors.schoolBlue,
+                            unfocusedBorderColor = AppTheme.colors.textLightColor,
+                            focusedBorderColor = AppTheme.colors.schoolBlue,
+                            focusedLabelColor = AppTheme.colors.schoolBlue,
+                            unfocusedLabelColor = AppTheme.colors.textBlackColor
                         ),
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
@@ -142,22 +196,30 @@ fun AuthPage(navController: NavController?) {
                             keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next
                         ),
                         maxLines = 1,
-                        textStyle = TextStyle(fontSize = 16.sp, lineHeight = 14.sp),
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 14.sp,
+                            color = AppTheme.colors.textBlackColor
+                        ),
                         label = { Text(text = "手机号", fontSize = 14.sp) })
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // 注册密码
                     OutlinedTextField(
-                        value = check,
-                        onValueChange = { if (check.length < 50) check = it },
+                        value = state.password,
+                        onValueChange = {
+                            if (it.length <= 50) viewModel.dispatch(AuthViewAction.UpdatePassword(it))
+                        },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            backgroundColor = Color.White,
-                            cursorColor = SchoolBlueDay,
-                            unfocusedBorderColor = TextLightDay,
-                            focusedBorderColor = SchoolBlueDay,
-                            focusedLabelColor = SchoolBlueDay,
+                            backgroundColor = if (!isSystemInDarkTheme()) Color.White
+                            else Color(0xFF2F2F2F),
+                            cursorColor = AppTheme.colors.schoolBlue,
+                            unfocusedBorderColor = AppTheme.colors.textLightColor,
+                            focusedBorderColor = AppTheme.colors.schoolBlue,
+                            focusedLabelColor = AppTheme.colors.schoolBlue,
                             disabledBorderColor = Color.Transparent,
                             disabledLabelColor = Color.Transparent,
+                            unfocusedLabelColor = AppTheme.colors.textBlackColor
                         ),
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier
@@ -167,7 +229,11 @@ fun AuthPage(navController: NavController?) {
                             keyboardType = KeyboardType.Password, imeAction = ImeAction.Next
                         ),
                         visualTransformation = PasswordVisualTransformation(),
-                        textStyle = TextStyle(fontSize = 16.sp, lineHeight = 14.sp),
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 14.sp,
+                            color = AppTheme.colors.textBlackColor
+                        ),
                         singleLine = true,
                         label = {
                             Text(text = "密码", fontSize = 14.sp)
@@ -182,20 +248,24 @@ fun AuthPage(navController: NavController?) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(value = token,
+                        OutlinedTextField(value = if (!passwordMode) state.token else state.password,
                             onValueChange = {
                                 if (!passwordMode) {
-                                    if (token.length < 4) token = it
+                                    if (it.length <= 4)
+                                        viewModel.dispatch(AuthViewAction.UpdateToken(it))
                                 } else {
-                                    if (token.length < 50) token = it
+                                    if (it.length <= 50)
+                                        viewModel.dispatch(AuthViewAction.UpdatePassword(it))
                                 }
                             },
                             colors = TextFieldDefaults.outlinedTextFieldColors(
-                                backgroundColor = Color.White,
-                                cursorColor = SchoolBlueDay,
-                                unfocusedBorderColor = TextLightDay,
-                                focusedBorderColor = SchoolBlueDay,
-                                focusedLabelColor = SchoolBlueDay
+                                backgroundColor = if (!isSystemInDarkTheme()) Color.White
+                                else Color(0xFF2F2F2F),
+                                cursorColor = AppTheme.colors.schoolBlue,
+                                unfocusedBorderColor = AppTheme.colors.textLightColor,
+                                focusedBorderColor = AppTheme.colors.schoolBlue,
+                                focusedLabelColor = AppTheme.colors.schoolBlue,
+                                unfocusedLabelColor = AppTheme.colors.textBlackColor
                             ),
                             shape = RoundedCornerShape(5.dp),
                             modifier = Modifier.fillMaxWidth(animateTokenSize),
@@ -204,30 +274,41 @@ fun AuthPage(navController: NavController?) {
                             ),
                             visualTransformation = if (passwordMode) PasswordVisualTransformation()
                             else VisualTransformation.None,
-                            textStyle = TextStyle(fontSize = 16.sp, lineHeight = 14.sp),
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 14.sp,
+                                color = AppTheme.colors.textBlackColor
+                            ),
                             singleLine = true,
                             label = {
                                 Text(text = if (passwordMode) "密码" else "验证码", fontSize = 14.sp)
                             })
                         Button(
-                            onClick = { /*TODO 获取验证码*/ },
+                            onClick = { viewModel.dispatch(AuthViewAction.RequestToken) },
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, color = TextLightDay),
+                            border = BorderStroke(1.dp, color = AppTheme.colors.textLightColor),
                             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-                            modifier = Modifier.width(animateGetWidth)
+                            modifier = Modifier
+                                .width(animateGetWidth)
+                                .widthIn(min = 120.dp),
+                            enabled = needWait == 0
                         ) {
                             Text(
-                                text = "获取验证码",
+                                text = if (needWait == 0) "获取验证码" else "${needWait}s",
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                 maxLines = 1,
-                                color = TextLightDay
+                                color = AppTheme.colors.textLightColor
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
-                        onClick = { /*TODO 登录*/ },
+                        onClick = {
+                            if (registerMode) viewModel.dispatch(AuthViewAction.Register)
+                            else if (passwordMode) viewModel.dispatch(AuthViewAction.LoginWithPassword)
+                            else viewModel.dispatch(AuthViewAction.LoginWithToken)
+                        },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -263,7 +344,7 @@ fun AuthPage(navController: NavController?) {
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
-                        onClick = { /*TODO 登录*/ },
+                        onClick = { /*TODO 忘记密码*/ },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -283,10 +364,12 @@ fun AuthPage(navController: NavController?) {
             }
         }
     }
+    if (onLoading)
+        WarpLoadingDialog()
 }
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun AuthPagePreview() {
-    AuthPage(null)
+    AuthPage(null, null)
 }

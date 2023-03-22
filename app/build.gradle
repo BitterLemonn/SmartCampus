@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id "org.jetbrains.kotlin.kapt"
+    id 'org.jetbrains.kotlin.plugin.serialization'
+    id 'kotlin-parcelize'
 }
 
 android {
@@ -78,4 +81,18 @@ dependencies {
     implementation("com.github.leavesCZY:Matisse:0.0.11") {
         exclude group: 'androidx.activity'
     }
+    // retrofit网络请求
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0"
+    // kotlin序列化
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0-RC"
+    // 更好的Logger
+    implementation 'com.github.open-android:Logger:v1.0.0'
+    // room数据库
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    // compose请求权限
+    implementation "com.google.accompanist:accompanist-permissions:$accompanist_version"
 }

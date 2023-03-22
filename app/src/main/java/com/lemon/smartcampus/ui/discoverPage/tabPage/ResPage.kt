@@ -10,8 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.lemon.smartcampus.data.entities.TopicEntity
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.data.database.entities.TopicEntity
+import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.LazyLoadMoreColumn
 import com.lemon.smartcampus.ui.widges.ResCard
 import com.lemon.smartcampus.ui.widges.TopicCard
@@ -32,7 +32,7 @@ fun ResPage(navController: NavController?, needToTop: Boolean = false, onScrollT
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = "还没有人发布资源哦,快和大家分享吧~",
-                color = TextLightDay,
+                color = AppTheme.colors.textLightColor,
                 fontSize = 16.sp
             )
         }

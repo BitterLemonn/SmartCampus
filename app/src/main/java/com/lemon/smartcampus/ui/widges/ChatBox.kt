@@ -34,10 +34,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.data.entities.ProfileEntity
-import com.lemon.smartcampus.data.globalData.ProfileInfo
-import com.lemon.smartcampus.ui.theme.SchoolBlueDay
-import com.lemon.smartcampus.ui.theme.TextDarkDay
+import com.lemon.smartcampus.data.database.entities.ProfileEntity
+import com.lemon.smartcampus.data.globalData.AppContext
+import com.lemon.smartcampus.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -49,7 +48,7 @@ fun ChatBox(
     onChange: (String) -> Unit,
     onSend: (String) -> Unit
 ) {
-    val profile: ProfileEntity = ProfileInfo.profile!!
+    val profile: ProfileEntity = AppContext.profile!!
     val rememberKey by rememberUpdatedState(newValue = key)
 
     var typeMode by remember { mutableStateOf(false) }
@@ -90,8 +89,8 @@ fun ChatBox(
             elevation = 10.dp,
             backgroundColor = Color.White
         ) {
-            if (profile.iconUrl.isNotBlank()) AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(profile.iconUrl),
+            if (profile.avatar.isNotBlank()) AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(profile.avatar),
                 contentDescription = "icon",
                 modifier = Modifier.fillMaxWidth()
             )
@@ -140,14 +139,17 @@ fun ChatBox(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester),
-                            textStyle = TextStyle(color = TextDarkDay, fontSize = 18.sp),
+                            textStyle = TextStyle(
+                                color = AppTheme.colors.textDarkColor,
+                                fontSize = 18.sp
+                            ),
                             keyboardActions = KeyboardActions(onSend = {
                                 onSend.invoke(rememberKey)
                             }),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             colors = TextFieldDefaults.textFieldColors(
-                                textColor = TextDarkDay,
-                                cursorColor = SchoolBlueDay,
+                                textColor = AppTheme.colors.textDarkColor,
+                                cursorColor = AppTheme.colors.schoolBlue,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 errorIndicatorColor = Color.Transparent,

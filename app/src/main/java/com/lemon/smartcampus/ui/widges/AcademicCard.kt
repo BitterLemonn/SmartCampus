@@ -2,21 +2,21 @@ package com.lemon.smartcampus.ui.widges
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lemon.smartcampus.data.entities.AcademicEntity
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.data.database.entities.AcademicEntity
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun AcademicCardTop(
@@ -32,35 +32,41 @@ fun AcademicCardTop(
             .padding(bottom = 5.dp)
     ) {
         if (!onLoad) {
-            Text(text = title, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = AppTheme.colors.textBlackColor
+            )
             Spacer(modifier = Modifier.height(7.dp))
             Text(
                 text = content,
                 fontSize = 12.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = TextLightDay
+                color = AppTheme.colors.textLightColor
             )
         } else {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
                     .height(22.dp)
-                    .background(Color(0xFFC4C4C4)),
+                    .background(AppTheme.colors.hintDarkColor),
             )
             Spacer(modifier = Modifier.height(7.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(16.dp)
-                    .background(Color(0xFFEAEAEA)),
+                    .background(AppTheme.colors.hintLightColor),
             )
             Spacer(modifier = Modifier.height(4.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(16.dp)
-                    .background(Color(0xFFEAEAEA)),
+                    .background(AppTheme.colors.hintLightColor),
             )
         }
     }
@@ -76,7 +82,11 @@ fun AcademicCardCommon(
     Column(
         Modifier
             .fillMaxWidth()
-            .clickable { onClick.invoke() }
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = MutableInteractionSource(),
+                onClick = onClick
+            )
             .padding(vertical = 5.dp)
     ) {
         Spacer(modifier = Modifier.height(7.dp))
@@ -92,21 +102,22 @@ fun AcademicCardCommon(
                     fontSize = 14.sp,
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth(0.6f),
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = AppTheme.colors.textBlackColor
                 )
-                Text(text = date, fontSize = 14.sp, color = TextLightDay)
+                Text(text = date, fontSize = 14.sp, color = AppTheme.colors.textLightColor)
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
                         .height(16.dp)
-                        .background(Color(0xFFC4C4C4)),
+                        .background(AppTheme.colors.hintDarkColor),
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.5f)
                         .height(16.dp)
-                        .background(Color(0xFFEAEAEA)),
+                        .background(AppTheme.colors.hintLightColor),
                 )
             }
         }
@@ -137,7 +148,7 @@ fun AcademicList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                color = HintGrayDay
+                color = AppTheme.colors.hintLightColor
             )
         }
         if (!onLoad)
@@ -149,7 +160,7 @@ fun AcademicList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp),
-                    color = HintGrayDay
+                    color = AppTheme.colors.hintLightColor
                 )
             }
         else
@@ -159,7 +170,7 @@ fun AcademicList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp),
-                    color = HintGrayDay
+                    color = AppTheme.colors.hintLightColor
                 )
             }
     }

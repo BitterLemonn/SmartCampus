@@ -23,9 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.HintDarkDay
-import com.lemon.smartcampus.ui.theme.TextDarkDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun ProfileResCard(
@@ -59,18 +57,18 @@ fun ProfileResCard(
                 modifier = Modifier
                     .size(25.dp)
                     .clip(CircleShape)
-                    .background(HintDarkDay)
+                    .background(AppTheme.colors.hintDarkColor)
             )
             Text(
                 text = resName,
                 fontSize = 10.sp,
-                color = TextDarkDay,
+                color = AppTheme.colors.textDarkColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 9.dp),
                 textAlign = TextAlign.Center
             )
-            Text(text = "$resSize MB", fontSize = 10.sp, color = TextLightDay)
+            Text(text = "$resSize MB", fontSize = 10.sp, color = AppTheme.colors.textLightColor)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

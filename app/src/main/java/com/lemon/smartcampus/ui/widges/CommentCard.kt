@@ -23,11 +23,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.data.entities.CommentEntity
-import com.lemon.smartcampus.data.entities.TopicEntity
-import com.lemon.smartcampus.ui.theme.HintDarkDay
-import com.lemon.smartcampus.ui.theme.HintGrayDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.data.database.entities.CommentEntity
+import com.lemon.smartcampus.data.database.entities.TopicEntity
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun CommentHostCard(
@@ -66,8 +64,16 @@ fun CommentHostCard(
                             .padding(vertical = 3.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = nickname, fontSize = 14.sp, color = TextLightDay)
-                        Text(text = topic.date, fontSize = 12.sp, color = TextLightDay)
+                        Text(
+                            text = nickname,
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textLightColor
+                        )
+                        Text(
+                            text = topic.date,
+                            fontSize = 12.sp,
+                            color = AppTheme.colors.textLightColor
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
@@ -95,7 +101,11 @@ fun CommentHostCard(
                             Spacer(modifier = Modifier.width(5.dp))
                         }
                         items(topic.tags) {
-                            Text(text = "#$it", fontSize = 12.sp, color = TextLightDay)
+                            Text(
+                                text = "#$it",
+                                fontSize = 12.sp,
+                                color = AppTheme.colors.textLightColor
+                            )
                             Spacer(modifier = Modifier.width(3.dp))
                         }
                     }
@@ -104,7 +114,11 @@ fun CommentHostCard(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "${topic.commentCount}", color = TextLightDay, fontSize = 12.sp)
+                        Text(
+                            text = "${topic.commentCount}",
+                            color = AppTheme.colors.textLightColor,
+                            fontSize = 12.sp
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Image(
                             painter = painterResource(id = R.drawable.message),
@@ -129,7 +143,7 @@ fun CommentHostCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(5.dp))
-                            .background(HintDarkDay)
+                            .background(AppTheme.colors.hintDarkColor)
                     )
                     Spacer(modifier = Modifier.width(13.dp))
                     Column(
@@ -143,13 +157,13 @@ fun CommentHostCard(
                             modifier = Modifier
                                 .height(12.dp)
                                 .width(120.dp)
-                                .background(TextLightDay)
+                                .background(AppTheme.colors.textLightColor)
                         )
                         Box(
                             modifier = Modifier
                                 .height(10.dp)
                                 .width(80.dp)
-                                .background(HintGrayDay)
+                                .background(AppTheme.colors.hintLightColor)
                         )
                     }
                 }
@@ -160,7 +174,7 @@ fun CommentHostCard(
                             modifier = Modifier
                                 .height(12.dp)
                                 .fillMaxWidth(if (it != 4) 1f else 0.6f)
-                                .background(TextLightDay)
+                                .background(AppTheme.colors.textLightColor)
                         )
                         if (it != 4) Spacer(modifier = Modifier.height(3.dp))
                     }
@@ -179,7 +193,7 @@ fun CommentHostCard(
                             modifier = Modifier
                                 .width(120.dp)
                                 .height(10.dp)
-                                .background(HintGrayDay)
+                                .background(AppTheme.colors.hintLightColor)
                         )
                     }
                     Row(
@@ -190,7 +204,7 @@ fun CommentHostCard(
                             modifier = Modifier
                                 .width(50.dp)
                                 .height(10.dp)
-                                .background(HintGrayDay)
+                                .background(AppTheme.colors.hintLightColor)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Image(
@@ -236,8 +250,12 @@ fun CommentSubCard(
                     .padding(vertical = 3.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = comment.nickName, fontSize = 14.sp, color = TextLightDay)
-                Text(text = comment.date, fontSize = 12.sp, color = TextLightDay)
+                Text(
+                    text = comment.nickName,
+                    fontSize = 14.sp,
+                    color = AppTheme.colors.textLightColor
+                )
+                Text(text = comment.date, fontSize = 12.sp, color = AppTheme.colors.textLightColor)
             }
         }
         Spacer(modifier = Modifier.height(11.dp))

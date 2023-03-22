@@ -1,4 +1,4 @@
-package com.lemon.smartcampus.data.entities
+package com.lemon.smartcampus.data.database.entities
 
 import com.lemon.smartcampus.ui.widges.ResType
 

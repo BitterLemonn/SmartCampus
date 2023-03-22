@@ -19,14 +19,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.smartcampus.ui.theme.AppTheme
+import com.lemon.smartcampus.ui.theme.SchoolRedDay
 
 data class ActionPair(
-    val text: String, val action: () -> Unit
+    val text: String, val isImportant: Boolean = false, val action: () -> Unit
 )
 
 @Composable
 fun MoreActionCard(
-    actionList: List<ActionPair>, isShow: Boolean = false
+    actionList: List<ActionPair>, isShow: Boolean
 ) {
     val isShowRemember by rememberUpdatedState(newValue = isShow)
     val widthAnimate by animateDpAsState(targetValue = if (isShowRemember) 120.dp else 0.dp)
@@ -37,7 +39,8 @@ fun MoreActionCard(
             .width(widthAnimate)
             .height(heightAnimate),
         elevation = 10.dp,
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
+        backgroundColor = AppTheme.colors.card
     ) {
         LazyColumn(
             modifier = Modifier
@@ -67,7 +70,9 @@ fun MoreActionCard(
                         text = item.text,
                         fontSize = 14.sp,
                         maxLines = 1,
-                        modifier = Modifier.padding(vertical = 5.dp)
+                        modifier = Modifier.padding(vertical = 5.dp),
+                        color = if (item.isImportant) SchoolRedDay
+                        else AppTheme.colors.textBlackColor
                     )
                 }
             }

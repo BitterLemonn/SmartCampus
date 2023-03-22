@@ -19,8 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.TextDarkDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun ProfileTopicCard(
@@ -58,7 +57,7 @@ fun ProfileTopicCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = date, fontSize = 10.sp, color = TextLightDay)
+                    Text(text = date, fontSize = 10.sp, color = AppTheme.colors.textLightColor)
                     Image(
                         painter = painterResource(id = R.drawable.del),
                         contentDescription = "delete",
@@ -78,7 +77,7 @@ fun ProfileTopicCard(
                     maxLines = 3,
                     fontSize = 12.sp,
                     overflow = TextOverflow.Ellipsis,
-                    color = TextDarkDay
+                    color = AppTheme.colors.textDarkColor
                 )
                 Row(
                     modifier = Modifier
@@ -100,7 +99,7 @@ fun ProfileTopicCard(
                         tags.forEach {
                             Text(
                                 text = "#$it",
-                                color = TextLightDay,
+                                color = AppTheme.colors.textLightColor,
                                 fontSize = 12.sp
                             )
                         }
@@ -114,7 +113,7 @@ fun ProfileTopicCard(
                     ) {
                         Text(
                             text = "$commentCount",
-                            color = TextLightDay,
+                            color = AppTheme.colors.textLightColor,
                             fontSize = 12.sp
                         )
                         Image(

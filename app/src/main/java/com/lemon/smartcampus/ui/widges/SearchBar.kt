@@ -18,8 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.TextDarkDay
-import com.lemon.smartcampus.ui.theme.TextLightDay
+import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun SearchBar(
@@ -33,7 +32,7 @@ fun SearchBar(
             .fillMaxWidth()
             .height(30.dp)
             .border(
-                border = BorderStroke(1.dp, TextLightDay),
+                border = BorderStroke(1.dp, AppTheme.colors.textLightColor),
                 RoundedCornerShape(10.dp)
             )
     ) {
@@ -48,9 +47,9 @@ fun SearchBar(
                 onValueChange = onKeyChange,
                 singleLine = true,
                 colors = TextFieldDefaults.textFieldColors(
-                    textColor = TextLightDay,
+                    textColor = AppTheme.colors.textLightColor,
                     backgroundColor = Color.Transparent,
-                    cursorColor = TextDarkDay,
+                    cursorColor = AppTheme.colors.textDarkColor,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),

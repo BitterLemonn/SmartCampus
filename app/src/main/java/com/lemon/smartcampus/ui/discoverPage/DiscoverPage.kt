@@ -2,6 +2,7 @@ package com.lemon.smartcampus.ui.discoverPage
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.runtime.*
@@ -99,7 +100,7 @@ fun DiscoverPage(
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         FloatingActionButton(
-            backgroundColor = Color.White,
+            backgroundColor = if (!isSystemInDarkTheme()) Color.White else Color(0xFF2A2A2A),
             onClick = { /*TODO*/ },
             modifier = Modifier
                 .absolutePadding(

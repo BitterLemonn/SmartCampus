@@ -14,9 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,13 +34,13 @@ fun CommentHostCard(
     downloading: Boolean = false,
     onDownload: (String) -> Unit = {}
 ) {
-    val nickname = topic.nickName
+    val nickname = topic.nickname
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp)
-            .height(300.dp),
+            .heightIn(max = 300.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // 正常显示
@@ -51,10 +52,22 @@ fun CommentHostCard(
                             .size(40.dp)
                             .clip(RoundedCornerShape(5.dp))
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current).data(topic.iconUrl)
-                                .build(), contentDescription = "${nickname}'s icon"
-                        )
+                        if (topic.avatar.isNotBlank())
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(topic.avatar)
+                                    .build(),
+                                contentDescription = "${nickname}'s icon",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        else
+                            Image(
+                                painter = painterResource(id = R.drawable.cat_logo),
+                                contentDescription = "${nickname}'s icon",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
                     }
                     Spacer(modifier = Modifier.width(13.dp))
                     Column(
@@ -70,21 +83,27 @@ fun CommentHostCard(
                             color = AppTheme.colors.textLightColor
                         )
                         Text(
-                            text = topic.date,
+                            text = topic.publishTime,
                             fontSize = 12.sp,
                             color = AppTheme.colors.textLightColor
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(text = topic.content, fontSize = 14.sp, color = Color.Black)
+                Text(
+                    text = topic.topicContent,
+                    fontSize = 14.sp,
+                    color = AppTheme.colors.textBlackColor,
+                    modifier = Modifier.padding(vertical = 20.dp),
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             if (topic.hasRes)
                 ResCard(
-                    resName = topic.resName,
-                    resType = topic.resType,
-                    resSize = topic.resSize,
-                    resLink = topic.resLink,
+                    resName = topic.resourceName,
+                    resType = topic.resourceType,
+                    resSize = topic.resourceSize,
+                    resLink = topic.resourceLink,
                     isDownloading = downloading,
                     isCard = true,
                     onDownload = onDownload
@@ -100,7 +119,7 @@ fun CommentHostCard(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                         }
-                        items(topic.tags) {
+                        items(topic.topicTag) {
                             Text(
                                 text = "#$it",
                                 fontSize = 12.sp,
@@ -130,7 +149,7 @@ fun CommentHostCard(
                 Spacer(modifier = Modifier.height(20.dp))
                 Divider(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEAEAEA),
+                    color = AppTheme.colors.hintDarkColor,
                     thickness = 1.dp
                 )
             }
@@ -217,7 +236,7 @@ fun CommentHostCard(
                 Spacer(modifier = Modifier.height(20.dp))
                 Divider(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEAEAEA),
+                    color = AppTheme.colors.hintDarkColor,
                     thickness = 1.dp
                 )
             }
@@ -235,13 +254,25 @@ fun CommentSubCard(
             .padding(vertical = 10.dp)
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(comment.iconUrl).build(),
-                contentDescription = "${comment.nickName}'s icon",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-            )
+            if (comment.avatar.isNotBlank())
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current).data(comment.avatar)
+                        .build(),
+                    contentDescription = "${comment.nickname}'s icon",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            else
+                Image(
+                    painter = painterResource(id = R.drawable.cat_logo),
+                    contentDescription = "${comment.nickname}'s icon",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
             Spacer(modifier = Modifier.width(13.dp))
             Column(
                 Modifier
@@ -251,17 +282,29 @@ fun CommentSubCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = comment.nickName,
+                    text = comment.nickname,
                     fontSize = 14.sp,
                     color = AppTheme.colors.textLightColor
                 )
-                Text(text = comment.date, fontSize = 12.sp, color = AppTheme.colors.textLightColor)
+                Text(
+                    text = comment.commentTime, fontSize = 12.sp,
+                    color = AppTheme.colors.textLightColor
+                )
             }
         }
         Spacer(modifier = Modifier.height(11.dp))
-        Text(text = comment.content, fontSize = 14.sp, color = Color.Black)
+        Text(
+            text = comment.comment,
+            fontSize = 14.sp,
+            color = AppTheme.colors.textBlackColor,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(20.dp))
-        Divider(modifier = Modifier.fillMaxWidth(), color = Color(0xFFEAEAEA), thickness = 1.dp)
+        Divider(
+            modifier = Modifier.fillMaxWidth(),
+            color = AppTheme.colors.hintLightColor,
+            thickness = 1.dp
+        )
     }
 }
 
@@ -274,9 +317,15 @@ private fun CommentHostCardPreview() {
 //    )
     CommentSubCard(
         CommentEntity(
-            nickName = "昵称昵称昵称", iconUrl = "", date = "1980-01-01", content =
+            nickname = "昵称昵称昵称",
+            avatar = "",
+            commentTime = "1980-01-01",
+            comment =
             "正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文" +
-                    "正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文"
+                    "正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文正文",
+            commentId = "",
+            userId = "",
+            topicId = ""
         )
     )
 }

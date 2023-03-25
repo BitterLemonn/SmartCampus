@@ -1,5 +1,7 @@
 package com.lemon.smartcampus.ui.common
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,24 +12,29 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.unit.IntSize
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.lemon.smartcampus.ui.authPage.AuthPage
 import com.lemon.smartcampus.ui.coverPage.CoverPage
+import com.lemon.smartcampus.ui.discoverPage.publishPage.PublishPage
+import com.lemon.smartcampus.ui.discoverPage.tabPage.TopicDetailPage
 import com.lemon.smartcampus.ui.homePage.HomePage
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.AppSnackBar
-import com.lemon.smartcampus.utils.AUTH_PAGE
-import com.lemon.smartcampus.utils.COVER_PAGE
-import com.lemon.smartcampus.utils.HOME_PAGE
+import com.lemon.smartcampus.utils.*
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppScaffold() {
-    val navController = rememberNavController()
+    val navController = rememberAnimatedNavController()
     val scaffoldState = rememberScaffoldState()
 
     Scaffold(
@@ -42,7 +49,7 @@ fun AppScaffold() {
             }
         }
     ) { padding ->
-        NavHost(
+        AnimatedNavHost(
             modifier = Modifier
                 .background(
                     color = AppTheme.colors.background
@@ -62,22 +69,86 @@ fun AppScaffold() {
             }
             composable(route = HOME_PAGE) {
                 rememberSystemUiController().setNavigationBarColor(
-                    if (isSystemInDarkTheme()) AppTheme.colors.textDarkColor else Color.White,
+                    if (isSystemInDarkTheme()) AppTheme.colors.hintDarkColor else Color.White,
                     darkIcons = isSystemInDarkTheme()
                 )
                 rememberSystemUiController().setStatusBarColor(
-                    if (!isSystemInDarkTheme()) AppTheme.colors.background
-                    else Color.Black,
-                    darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
                 HomePage(navController = navController, scaffoldState = scaffoldState)
             }
             composable(route = AUTH_PAGE) {
                 rememberSystemUiController().setSystemBarsColor(
-                    if (!isSystemInDarkTheme()) AppTheme.colors.background
-                    else Color.Black, darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
                 AuthPage(navController = navController, scaffoldState = scaffoldState)
+            }
+            composable(route = PUBLISH_PAGE,
+                enterTransition = {
+                    expandIn(
+                        expandFrom = Alignment.TopCenter,
+                        animationSpec = tween(400)
+                    ) { IntSize.Zero } + fadeIn()
+                },
+                popEnterTransition = {
+                    expandIn(
+                        expandFrom = Alignment.TopCenter,
+                        animationSpec = tween(400)
+                    ) { IntSize.Zero } + fadeIn()
+                },
+                popExitTransition = {
+                    shrinkOut(
+                        shrinkTowards = Alignment.TopCenter,
+                        animationSpec = tween(400)
+                    ) { IntSize.Zero } + fadeOut()
+                },
+                exitTransition = {
+                    shrinkOut(
+                        shrinkTowards = Alignment.TopCenter,
+                        animationSpec = tween(400)
+                    ) { IntSize.Zero } + fadeOut()
+                }
+            ) {
+                rememberSystemUiController().setSystemBarsColor(
+                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
+                )
+                PublishPage(navController = navController, scaffoldState = scaffoldState)
+            }
+            composable(
+                route = "$DETAILS_PAGE/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                enterTransition = {
+                    expandIn(
+                        expandFrom = Alignment.TopCenter,
+                        animationSpec = tween(200)
+                    ) { IntSize.Zero } + fadeIn()
+                },
+                popEnterTransition = {
+                    expandIn(
+                        expandFrom = Alignment.TopCenter,
+                        animationSpec = tween(200)
+                    ) { IntSize.Zero } + fadeIn()
+                },
+                popExitTransition = {
+                    shrinkOut(
+                        shrinkTowards = Alignment.TopCenter,
+                        animationSpec = tween(200)
+                    ) { IntSize.Zero } + fadeOut()
+                },
+                exitTransition = {
+                    shrinkOut(
+                        shrinkTowards = Alignment.TopCenter,
+                        animationSpec = tween(200)
+                    ) { IntSize.Zero } + fadeOut()
+                }
+            ) {
+                val argument = it.arguments
+                val id = argument?.getString("id") ?: ""
+                TopicDetailPage(
+                    navController = navController,
+                    scaffoldState = scaffoldState,
+                    id = id
+                )
             }
         }
     }

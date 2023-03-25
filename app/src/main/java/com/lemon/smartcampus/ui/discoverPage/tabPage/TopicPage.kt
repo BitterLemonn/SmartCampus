@@ -1,100 +1,106 @@
 package com.lemon.smartcampus.ui.discoverPage.tabPage
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Text
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.lemon.smartcampus.R
-import com.lemon.smartcampus.data.database.entities.TopicEntity
-import com.lemon.smartcampus.ui.theme.AppTheme
-import com.lemon.smartcampus.ui.widges.LazyLoadMoreColumn
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
+import com.lemon.smartcampus.data.globalData.AppContext
+import com.lemon.smartcampus.ui.widges.SNACK_ERROR
 import com.lemon.smartcampus.ui.widges.TopicCard
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
+import com.lemon.smartcampus.ui.widges.popupSnackBar
+import com.lemon.smartcampus.utils.DETAILS_PAGE
+import com.lemon.smartcampus.viewModel.topic.TopicViewModel
+import com.orhanobut.logger.Logger
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TopicPage(navController: NavController?) {
-    var loadState by remember { mutableStateOf(false) }
+fun TopicPage(
+    navController: NavController?,
+    scaffoldState: ScaffoldState? = null,
+    viewModel: TopicViewModel = viewModel()
+) {
 
-    var isLoading by remember { mutableStateOf(true) }
-    val topicList = remember { mutableStateListOf<TopicEntity>() }
-    val lazyState = rememberLazyListState()
-    var firstSeenItem by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
+    val pageData = viewModel.getPage(true).collectAsLazyPagingItems()
+    var refreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(refreshing, { pageData.refresh() })
 
-    LaunchedEffect(key1 = lazyState) {
-        snapshotFlow { lazyState.firstVisibleItemIndex }.onEach { firstSeenItem = it }.collect()
-    }
+//    LaunchedEffect(key1 = Unit) {
+//        snapshotFlow { pageData.loadState }
+//            .onEach {
+//                Logger.d("loading: $it")
+//                when (it.refresh) {
+//                    is LoadState.Loading -> refreshing = true
+//                    is LoadState.Error -> scaffoldState?.let {
+//                        val error = (pageData.loadState.refresh as LoadState.Error).error.message
+//                        popupSnackBar(scope, scaffoldState, SNACK_ERROR, error ?: "未知异常")
+//                        delay(100)
+//                        refreshing = false
+//                        pageData.retry()
+//                    }
+//                    else -> refreshing = false
+//                }
+//            }.collect()
+//        snapshotFlow { pageData.loadState.append is LoadState.Error }
+//            .collectLatest {
+//                if (it) scaffoldState?.let {
+//                    popupSnackBar(scope, scaffoldState, SNACK_ERROR, "网络好像被UFO捉走了QAQ")
+//                }
+//            }
+//    }
 
-    if (topicList.isEmpty() && !isLoading) Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
     ) {
-        Text(
-            text = "还没有人发布话题哦,快和大家聊聊吧~", color = AppTheme.colors.textLightColor, fontSize = 16.sp
-        )
-    }
-    else LazyLoadMoreColumn(loadState = loadState, onLoad = { /*TODO*/ }) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            state = lazyState
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (topicList.isEmpty()) items(3) {
-                TopicCard(
-                    isLoading = true,
-                    iconUrl = "",
-                    nickName = "",
-                    date = "",
-                    content = "",
-                    tag = listOf()
-                ) { // onClick
-
-                }
-            }
-            else topicList.forEach {
-                item {
+            if (pageData.itemCount == 0)
+                items(5) {
                     TopicCard(
-                        iconUrl = it.iconUrl,
-                        nickName = it.nickName,
-                        date = it.date,
-                        content = it.content,
-                        tag = it.tags
+                        isLoading = true,
+                        iconUrl = "",
+                        nickName = "",
+                        date = "",
+                        content = "",
+                        tag = listOf()
+                    ) {}
+                }
+            items(pageData) { entity ->
+                entity?.let {
+                    TopicCard(
+                        iconUrl = it.avatar,
+                        nickName = it.nickname,
+                        date = it.publishTime,
+                        content = it.topicContent,
+                        tag = it.topicTag,
+                        commentCount = it.commentCount
                     ) { // onClick
-
+                        AppContext.topicDetail += mapOf(Pair(it.topicId, it))
+                        navController?.navigate("$DETAILS_PAGE/${it.topicId}")
                     }
                 }
             }
         }
-    }
-    if (firstSeenItem != 0) BoxWithConstraints(Modifier.fillMaxSize()) {
-        FloatingActionButton(
-            backgroundColor = Color(0xFF58BEFF),
-            onClick = {
-                scope.launch { lazyState.animateScrollToItem(0) }
-            },
-            modifier = Modifier
-                .absolutePadding(left = maxWidth * 0.8f, top = maxHeight * 0.75f)
-                .size(50.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.up),
-                contentDescription = "up",
-                modifier = Modifier.size(30.dp)
-            )
-        }
+        PullRefreshIndicator(refreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
     }
 }
 

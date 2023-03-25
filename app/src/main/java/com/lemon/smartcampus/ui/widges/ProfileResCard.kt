@@ -27,7 +27,7 @@ import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun ProfileResCard(
-    resType: ResType = ResType.UNKNOWN,
+    resType: Int = ResType.UNKNOWN,
     resName: String,
     resSize: Float,
     resLink: String,

@@ -80,17 +80,17 @@ fun ChatBox(
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth()
-            .background(Color(0xFFFAFAFA)),
+            .background(AppTheme.colors.background),
         verticalAlignment = Alignment.Bottom
     ) {
         Card(
             shape = CircleShape,
             modifier = Modifier.size(50.dp),
             elevation = 10.dp,
-            backgroundColor = Color.White
+            backgroundColor = AppTheme.colors.card
         ) {
             if (profile.avatar.isNotBlank()) AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(profile.avatar),
+                model = ImageRequest.Builder(LocalContext.current).data(profile.avatar).build(),
                 contentDescription = "icon",
                 modifier = Modifier.fillMaxWidth()
             )
@@ -107,7 +107,7 @@ fun ChatBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 50.dp, max = 180.dp),
-            backgroundColor = Color.White
+            backgroundColor = AppTheme.colors.card
         ) {
             Box(
                 modifier = Modifier.animateContentSize(animationSpec = tween()),
@@ -140,7 +140,7 @@ fun ChatBox(
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester),
                             textStyle = TextStyle(
-                                color = AppTheme.colors.textDarkColor,
+                                color = AppTheme.colors.textBlackColor,
                                 fontSize = 18.sp
                             ),
                             keyboardActions = KeyboardActions(onSend = {
@@ -148,13 +148,13 @@ fun ChatBox(
                             }),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             colors = TextFieldDefaults.textFieldColors(
-                                textColor = AppTheme.colors.textDarkColor,
+                                textColor = AppTheme.colors.textBlackColor,
                                 cursorColor = AppTheme.colors.schoolBlue,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 errorIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent,
-                                backgroundColor = Color.White
+                                backgroundColor = AppTheme.colors.card
                             )
                         )
                     } else Box(

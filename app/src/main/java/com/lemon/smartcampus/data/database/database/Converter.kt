@@ -1,9 +1,8 @@
 package com.lemon.smartcampus.data.database.database
 
 import androidx.room.TypeConverter
+import com.lemon.smartcampus.ui.widges.ResType
 import com.lemon.smartcampus.utils.JsonConverter
-import com.orhanobut.logger.Logger
-
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.util.*

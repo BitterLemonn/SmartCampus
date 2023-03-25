@@ -5,7 +5,7 @@
         path="." />
     <cache-path
         name="cache-path"
-        path="." />
+        path="/caches" />
     <external-path
         name="external_storage_root"
         path="." />

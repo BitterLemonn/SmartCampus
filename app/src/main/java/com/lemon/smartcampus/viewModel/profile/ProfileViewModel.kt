@@ -6,8 +6,8 @@ import com.lemon.smartcampus.data.database.database.GlobalDataBase
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.data.repository.ProfileRepository
-import com.lemon.smartcampus.utils.LoginException
 import com.lemon.smartcampus.utils.NetworkState
+import com.lemon.smartcampus.utils.logoutLocal
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -18,6 +18,7 @@ import retrofit2.HttpException
 import java.io.File
 import java.net.ConnectException
 import java.net.SocketTimeoutException
+import javax.security.auth.login.LoginException
 
 class ProfileViewModel : ViewModel() {
     private val repository = ProfileRepository.getInstance()
@@ -30,8 +31,10 @@ class ProfileViewModel : ViewModel() {
     fun dispatch(viewAction: ProfileViewAction) {
         when (viewAction) {
             is ProfileViewAction.Logout -> logout()
-            is ProfileViewAction.ChangeAvatar -> changeAvatar(viewAction.path)
-            is ProfileViewAction.ChangeBackground -> changeBackground(viewAction.path)
+            is ProfileViewAction.ChangeAvatar -> changeUserImg(viewAction.path, true)
+            is ProfileViewAction.ChangeBackground -> changeUserImg(viewAction.path, false)
+            is ProfileViewAction.ChangeNickname -> changeNickname(viewAction.name)
+            is ProfileViewAction.ChangeTags -> changeTags(viewAction.tags)
         }
     }
 
@@ -40,14 +43,13 @@ class ProfileViewModel : ViewModel() {
             flow {
                 logoutLogic()
                 emit("登出成功")
-            }.onStart {
-                // 避免无网络连接(直接本地先清理)
-                AppContext.profile = null
-                // 移除持久化
-                GlobalDataBase.database.profileDao().deleteAll()
             }.onEach {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
+                if (it is LoginException) {
+                    logoutLocal(viewModelScope)
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
                 // 非网络问题弹出提示
                 if (it !is ConnectException && it !is SocketTimeoutException && it !is HttpException)
                     _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
@@ -56,22 +58,34 @@ class ProfileViewModel : ViewModel() {
     }
 
     private suspend fun logoutLogic() {
-        when (val result = repository.logout()) {
+        val token = AppContext.profile?.token!!
+        // 避免无网络连接(直接本地先清理)
+        AppContext.profile = null
+        // 移除持久化
+        GlobalDataBase.database.profileDao().deleteAll()
+        when (val result = repository.logout(token)) {
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
             else -> {}
         }
     }
 
-    private fun changeAvatar(path: String) {
+    private fun changeUserImg(path: String, avatarMode: Boolean) {
         viewModelScope.launch {
             flow {
-                changeAvatarLogic(path)
+                if (avatarMode)
+                    changeAvatarLogic(path)
+                else
+                    changeBackgroundLogic(path)
                 emit("更改成功")
             }.onStart {
                 _viewEvents.setEvent(ProfileViewEvent.ShowLoadingDialog)
             }.onEach {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
+                if (it is LoginException) {
+                    logoutLocal(viewModelScope)
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
                 _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
             }.onCompletion {
                 _viewEvents.setEvent(ProfileViewEvent.DismissLoadingDialog)
@@ -81,24 +95,108 @@ class ProfileViewModel : ViewModel() {
 
     private suspend fun changeAvatarLogic(path: String) {
         val file = File(path)
-        val id = AppContext.profile?.id
+        val id = AppContext.profile?.id!!
         Logger.d("file size: ${file.length()}")
         if (file.length() > 0) {
-            id?.let {
-                when (val result = repository.changAvatar(file, it)) {
-                    is NetworkState.Success -> {
-                        result.data?.let { avatar ->
-                            AppContext.profile = AppContext.profile?.copy(avatar = avatar)
-                        }
+            when (val result = repository.changeAvatar(file, id)) {
+                is NetworkState.Success -> {
+                    result.data?.let { avatar ->
+                        AppContext.profile = AppContext.profile?.copy(avatar = avatar)
+                        // room持久化
+                        GlobalDataBase.database.profileDao().deleteAll()
+                        GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
                     }
-                    is NetworkState.Error -> throw result.e ?: Exception(result.msg)
                 }
-            } ?: throw LoginException("请先登录")
+                is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+            }
         } else throw Exception("获取文件失败")
     }
 
-    private fun changeBackground(path: String) {
+    private suspend fun changeBackgroundLogic(path: String) {
+        val file = File(path)
+        val id = AppContext.profile?.id!!
+        Logger.d("file size: ${file.length()}")
+        if (file.length() > 0) {
+            when (val result = repository.changBackground(file, id)) {
+                is NetworkState.Success -> {
+                    result.data?.let { bg ->
+                        AppContext.profile = AppContext.profile?.copy(background = bg)
+                        // room持久化
+                        GlobalDataBase.database.profileDao().deleteAll()
+                        GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
+                    }
+                }
+                is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+            }
+        } else throw Exception("获取文件失败")
+    }
 
+    private fun changeNickname(nickname: String) {
+        viewModelScope.launch {
+            flow {
+                changeNicknameLogic(nickname)
+                emit("修改成功")
+            }.onStart {
+                _viewEvents.setEvent(ProfileViewEvent.ShowLoadingDialog)
+            }.onEach {
+                _viewEvents.setEvent(ProfileViewEvent.Recompose)
+            }.catch {
+                if (it is LoginException) {
+                    logoutLocal(viewModelScope)
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
+                _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
+            }.onCompletion {
+                _viewEvents.setEvent(ProfileViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun changeNicknameLogic(nickname: String) {
+        val id = AppContext.profile?.id!!
+        when (val result = repository.changeNickname(id = id, nickname = nickname)) {
+            is NetworkState.Success -> {
+                AppContext.profile = AppContext.profile?.copy(nickname = nickname)
+                // room持久化
+                GlobalDataBase.database.profileDao().deleteAll()
+                GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
+            }
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
+    }
+
+    private fun changeTags(tags: List<String>) {
+        viewModelScope.launch {
+            flow {
+                changeTagsLogic(tags)
+                emit("修改成功")
+            }.onStart {
+                _viewEvents.setEvent(ProfileViewEvent.ShowLoadingDialog)
+            }.onEach {
+                _viewEvents.setEvent(ProfileViewEvent.Recompose)
+            }.catch {
+                if (it is LoginException) {
+                    logoutLocal(viewModelScope)
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
+                _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
+            }.onCompletion {
+                _viewEvents.setEvent(ProfileViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun changeTagsLogic(tags: List<String>) {
+        val id = AppContext.profile?.id!!
+        when (val result = repository.changeTags(id = id, tags = tags)) {
+            is NetworkState.Success -> {
+                AppContext.profile = AppContext.profile?.copy(tags = tags)
+                // room持久化
+                GlobalDataBase.database.profileDao().deleteAll()
+                GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
+            }
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
     }
 }
 
@@ -111,6 +209,8 @@ sealed class ProfileViewAction {
     object Logout : ProfileViewAction()
     data class ChangeAvatar(val path: String) : ProfileViewAction()
     data class ChangeBackground(val path: String) : ProfileViewAction()
+    data class ChangeNickname(val name: String) : ProfileViewAction()
+    data class ChangeTags(val tags: List<String>) : ProfileViewAction()
 }
 
 sealed class ProfileViewEvent {
@@ -118,4 +218,5 @@ sealed class ProfileViewEvent {
     object DismissLoadingDialog : ProfileViewEvent()
     object Recompose : ProfileViewEvent()
     data class ShowToast(val msg: String) : ProfileViewEvent()
+    object Logout : ProfileViewEvent()
 }

@@ -75,7 +75,7 @@ fun BottomNaviBar(
 ) {
     Row(
         modifier = modifier
-            .background(if (isSystemInDarkTheme()) AppTheme.colors.textDarkColor else Color.White)
+            .background(if (isSystemInDarkTheme()) AppTheme.colors.hintDarkColor else Color.White)
             .fillMaxWidth()
             .height(54.dp),
         verticalAlignment = Alignment.CenterVertically,

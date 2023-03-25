@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,10 +17,13 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.lemon.smartcampus.R
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.discoverPage.tabPage.ResPage
 import com.lemon.smartcampus.ui.discoverPage.tabPage.TopicPage
 import com.lemon.smartcampus.ui.widges.SearchBar
 import com.lemon.smartcampus.ui.widges.TabTitle
+import com.lemon.smartcampus.utils.AUTH_PAGE
+import com.lemon.smartcampus.utils.PUBLISH_PAGE
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
@@ -30,15 +34,17 @@ object TabPage {
     fun getPage(
         index: Int,
         navController: NavController?,
+        scaffoldState: ScaffoldState? = null,
         needToTop: Boolean = false,
         onScrollTop: () -> Unit
     ): @Composable () -> Unit {
         if (pageList.isEmpty()) {
             pageList = listOf(
-                { TopicPage(navController = navController) },
+                { TopicPage(navController = navController, scaffoldState = scaffoldState) },
                 {
                     ResPage(
                         navController = navController,
+                        scaffoldState = scaffoldState,
                         needToTop = index == 1 && needToTop
                     ) { onScrollTop.invoke() }
                 }
@@ -52,7 +58,8 @@ object TabPage {
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun DiscoverPage(
-    navController: NavController?
+    navController: NavController?,
+    scaffoldState: ScaffoldState? = null
 ) {
     var searchKey by remember { mutableStateOf("") }
 
@@ -94,14 +101,25 @@ fun DiscoverPage(
             state = pageState,
             userScrollEnabled = false
         ) {
-            TabPage.getPage(it, navController, needToTop) { needToTop = false }.invoke()
+            TabPage.getPage(it, navController, scaffoldState, needToTop) { needToTop = false }
+                .invoke()
         }
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         FloatingActionButton(
             backgroundColor = if (!isSystemInDarkTheme()) Color.White else Color(0xFF2A2A2A),
-            onClick = { /*TODO*/ },
+            onClick = {
+                if (!AppContext.profile?.id.isNullOrBlank())
+                    navController?.navigate(PUBLISH_PAGE) {
+                        launchSingleTop
+                        restoreState
+                    }
+                else navController?.navigate(AUTH_PAGE) {
+                    launchSingleTop
+                    restoreState
+                }
+            },
             modifier = Modifier
                 .absolutePadding(
                     left = maxWidth * 0.8f,

@@ -4,9 +4,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.lemon.smartcampus.data.common.CommonInterceptor
 import com.lemon.smartcampus.data.common.UserUrl
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
-import com.lemon.smartcampus.data.database.networkEntities.CodeLoginEntity
-import com.lemon.smartcampus.data.database.networkEntities.PasswordLoginEntity
-import com.lemon.smartcampus.data.database.networkEntities.RegisterEntity
+import com.lemon.smartcampus.data.database.networkEntities.*
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -47,10 +45,42 @@ interface UserApi {
         @Body body: RequestBody
     ): ResponseData<String>
 
+    @POST("editBackground")
+    suspend fun changeBackground(
+        @Header("token") token: String,
+        @Body body: RequestBody
+    ): ResponseData<String>
+
+    @POST("editNickname")
+    suspend fun changeNickname(
+        @Header("token") token: String,
+        @Body body: ChangeNicknameEntity
+    ): ResponseData<String?>
+
+    @POST("editTag")
+    suspend fun changeTags(
+        @Header("token") token: String,
+        @Body body: ChangeTagsEntity
+    ): ResponseData<String?>
+
+    @POST("editPasswordQualification")
+    @FormUrlEncoded
+    suspend fun checkForgetToken(
+        @Field("phone") phone: String,
+        @Field("code") code: String
+    ): ResponseData<String?>
+
+    @POST("editPasswordSure")
+    @FormUrlEncoded
+    suspend fun changePassword(
+        @Field("userId") userId: String,
+        @Field("password") password: String
+    ): ResponseData<String?>
+
     companion object {
         /**
          * 获取接口实例用于调用对接方法
-         * @return ServerApi
+         * @return UserApi
          */
         @OptIn(ExperimentalSerializationApi::class)
         fun create(): UserApi {

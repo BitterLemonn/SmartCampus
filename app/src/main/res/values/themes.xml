@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.SmartCampus" parent="Theme.SmartCampus.NoActionBar">
-        <item name="android:statusBarColor">@color/transparent</item>
-    </style>
-
-    <style name="Theme.SmartCampus.NoActionBar">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+    <style name="Theme.SmartCampus" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/purple_700</item>
     </style>
 </resources>

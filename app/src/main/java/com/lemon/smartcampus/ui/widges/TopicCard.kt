@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -24,9 +25,19 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
+import java.text.DecimalFormat
 
-enum class ResType {
-    TXT, DOC, XLS, PPT, PSD, PNG, PDF, UNKNOWN
+@kotlinx.serialization.Serializable
+object ResType {
+    const val TXT = 0
+    const val DOC = 1
+    const val XLS = 2
+    const val PPT = 3
+    const val PSD = 4
+    const val PNG = 5
+    const val PDF = 6
+    const val RAR = 7
+    const val UNKNOWN = 8
 }
 
 @Composable
@@ -69,14 +80,25 @@ fun TopicCard(
                         .fillMaxWidth()
                         .height(40.dp)
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current).data(iconUrl)
-                            .crossfade(true).build(),
-                        contentDescription = "$nickName icon",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(5.dp))
-                    )
+                    if (iconUrl.isNotBlank())
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current).data(iconUrl)
+                                .crossfade(true).build(),
+                            contentDescription = "$nickName icon",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(5.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    else
+                        Image(
+                            painter = painterResource(id = R.drawable.cat_logo),
+                            contentDescription = "$nickName icon",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(5.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(
                         modifier = Modifier
@@ -86,14 +108,14 @@ fun TopicCard(
                     ) {
                         Text(
                             text = nickName,
-                            color = AppTheme.colors.textLightColor,
+                            color = AppTheme.colors.textDarkColor,
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = date,
-                            color = AppTheme.colors.textLightColor,
+                            color = AppTheme.colors.textDarkColor,
                             fontSize = 10.sp
                         )
                     }
@@ -102,7 +124,7 @@ fun TopicCard(
                 Spacer(modifier = Modifier.height(7.dp))
                 Text(
                     text = content,
-                    color = AppTheme.colors.textDarkColor,
+                    color = AppTheme.colors.textBlackColor,
                     maxLines = 3,
                     fontSize = 14.sp,
                     overflow = TextOverflow.Ellipsis,
@@ -112,33 +134,38 @@ fun TopicCard(
                 )
                 Spacer(modifier = Modifier.height(7.dp))
                 if (hasRes)
-                    resCard.invoke()
+                    Box(modifier = Modifier.padding(bottom = 15.dp)){
+                        resCard.invoke()
+                    }
                 // 工具栏
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = if (tag.isNotEmpty()) Arrangement.SpaceBetween
+                    else Arrangement.End
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(0.5f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.tag),
-                            contentDescription = "tag",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        tag.forEach {
-                            Text(
-                                text = "#$it",
-                                color = AppTheme.colors.textLightColor,
-                                fontSize = 12.sp
+                    if (tag.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(0.5f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.tag),
+                                contentDescription = "tag",
+                                modifier = Modifier.size(20.dp)
                             )
+                            tag.forEach {
+                                Text(
+                                    text = "#$it",
+                                    color = AppTheme.colors.textLightColor,
+                                    fontSize = 12.sp
+                                )
+                                Spacer(modifier = Modifier.width(15.dp))
+                            }
                         }
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth(0.2f),
+                        modifier = Modifier.width(40.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -268,7 +295,7 @@ fun TopicCardPlaceHolder() {
 @Composable
 fun ResCard(
     resName: String = "",
-    resType: ResType = ResType.UNKNOWN,
+    resType: Int = ResType.UNKNOWN,
     resSize: Float = 0f,
     resLink: String = "",
     isDownloading: Boolean = false,
@@ -280,16 +307,14 @@ fun ResCard(
             modifier = Modifier
                 .border(
                     width = 2.dp,
-                    color = if (!isSystemInDarkTheme()) Color(0xFFEAEAEA) else Color(0xFF2A2A2A),
+                    color = AppTheme.colors.textLightColor,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .clip(RoundedCornerShape(10.dp))
                 .clickable(
                     indication = rememberRipple(),
                     interactionSource = MutableInteractionSource()
-                ) {
-                    onDownload.invoke(resLink)
-                }
+                ) { onDownload.invoke(resLink) }
                 .padding(horizontal = 13.dp)
                 .fillMaxWidth()
                 .height(50.dp)
@@ -299,11 +324,12 @@ fun ResCard(
     else
         Card(
             modifier = Modifier
-                .padding(horizontal = 13.dp)
+                .padding(start = 13.dp, end = 13.dp, bottom = 10.dp)
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(10.dp),
-            elevation = 10.dp
+            elevation = 10.dp,
+            backgroundColor = AppTheme.colors.card
         ) {
             Box(modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
@@ -321,7 +347,7 @@ fun ResCard(
 @Composable
 fun ResContent(
     resName: String = "",
-    resType: ResType = ResType.UNKNOWN,
+    resType: Int = ResType.UNKNOWN,
     resSize: Float = 0f,
     isDownloading: Boolean = false
 ) {
@@ -331,7 +357,7 @@ fun ResContent(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(0.5f),
+            modifier = Modifier.fillMaxWidth(0.5f).padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -351,12 +377,14 @@ fun ResContent(
             )
         }
         Row(
-            modifier = Modifier.fillMaxWidth(0.5f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text = "$resSize MB",
+                text = "${DecimalFormat("0.##").format(resSize)} MB",
                 color = AppTheme.colors.textLightColor,
                 fontSize = 12.sp,
                 maxLines = 1
@@ -364,7 +392,7 @@ fun ResContent(
             Spacer(modifier = Modifier.width(15.dp))
             Image(
                 painter = painterResource(id = R.drawable.download2),
-                contentDescription = "icon",
+                contentDescription = "download",
                 modifier = Modifier.size(25.dp)
             )
         }
@@ -374,7 +402,7 @@ fun ResContent(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun CardPreview() {
-    TopicCard(isLoading = true,
+    TopicCard(isLoading = false,
         iconUrl = "",
         nickName = "昵称昵称昵称昵称昵称",
         date = "1980-01-01",

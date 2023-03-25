@@ -6,15 +6,8 @@ import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.database.networkEntities.CodeLoginEntity
 import com.lemon.smartcampus.data.database.networkEntities.PasswordLoginEntity
 import com.lemon.smartcampus.data.database.networkEntities.RegisterEntity
-import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.NetworkState
-import com.lemon.smartcampus.utils.NoNeedResponse
 import com.lemon.smartcampus.utils.UnifiedExceptionHandler
-import kotlinx.serialization.encodeToString
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 
 class AuthRepository {
     companion object {
@@ -42,6 +35,18 @@ class AuthRepository {
     suspend fun requestToken(phone: String): NetworkState<String> {
         return UnifiedExceptionHandler.handleSuspend {
             TokenApi.create().requestToken(phone)
+        }
+    }
+
+    suspend fun checkForgetToken(phone: String, code: String): NetworkState<String?> {
+        return UnifiedExceptionHandler.handleSuspend {
+            UserApi.create().checkForgetToken(phone = phone, code = code)
+        }
+    }
+
+    suspend fun changePassword(password: String, userId: String): NetworkState<String?> {
+        return UnifiedExceptionHandler.handleSuspend {
+            UserApi.create().changePassword(password = password, userId = userId)
         }
     }
 

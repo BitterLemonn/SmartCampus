@@ -7,6 +7,11 @@ import kotlinx.serialization.json.Json
 const val COVER_PAGE = "COVER_PAGE"
 const val HOME_PAGE = "HOME_PAGE"
 const val AUTH_PAGE = "AUTH_PAGE"
+const val PUBLISH_PAGE = "PUBLISH_PAGE"
+const val DETAILS_PAGE = "DETAILS_PAGE"
+
+// 每页数据量
+const val COUNT_PER_PAGE = 5
 
 // JsonConverter
 object JsonConverter {
@@ -21,4 +26,5 @@ object JsonConverter {
         // 忽略json空值
         coerceInputValues = true
     }
+
 }

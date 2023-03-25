@@ -1,6 +1,7 @@
 package com.lemon.smartcampus.ui.profilePage
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -32,10 +33,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.lemon.smartcampus.BuildConfig
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.database.entities.TopicEntity
@@ -43,7 +46,9 @@ import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
 import com.lemon.smartcampus.utils.AUTH_PAGE
-import com.lemon.smartcampus.utils.imageUri2Path
+import com.lemon.smartcampus.utils.PUBLISH_PAGE
+import com.lemon.smartcampus.utils.saveBitmapToFile
+import com.lemon.smartcampus.utils.uri2Path
 import com.lemon.smartcampus.viewModel.profile.ProfileViewAction
 import com.lemon.smartcampus.viewModel.profile.ProfileViewEvent
 import com.lemon.smartcampus.viewModel.profile.ProfileViewModel
@@ -51,6 +56,7 @@ import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 import github.leavesczy.matisse.Matisse
 import github.leavesczy.matisse.MatisseContract
+import java.io.File
 
 @Composable
 fun ProfilePage(
@@ -65,6 +71,8 @@ fun ProfilePage(
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    var isLoading by remember { mutableStateOf(false) }
+
     var recompose by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = Unit) {
         viewModel.viewEvents.observeEvent(lifecycleOwner) {
@@ -75,31 +83,64 @@ fun ProfilePage(
                     )
                 }
                 is ProfileViewEvent.Recompose -> recompose = true
-                else -> {}
+                is ProfileViewEvent.ShowLoadingDialog -> isLoading = true
+                is ProfileViewEvent.DismissLoadingDialog -> isLoading = false
+                is ProfileViewEvent.Logout -> navController?.navigate(AUTH_PAGE) {
+                    popUpToRoute
+                    launchSingleTop
+                }
             }
 
         }
     }
 
-    val oldAvatarLauncher = rememberLauncherForActivityResult(MatisseContract()) {
+    var avatarMode by remember { mutableStateOf(true) }
+    var albumMode by remember { mutableStateOf(true) }
+    val oldLauncher = rememberLauncherForActivityResult(MatisseContract()) {
         if (it.isNotEmpty()) {
             val mediaResource = it[0]
             val imageUri = mediaResource.uri
             val imagePath = mediaResource.path
-            Logger.d("imagePath: $imagePath")
-            viewModel.dispatch(ProfileViewAction.ChangeAvatar(imagePath))
+            if (avatarMode)
+                viewModel.dispatch(ProfileViewAction.ChangeAvatar(imagePath))
+            else
+                viewModel.dispatch(ProfileViewAction.ChangeBackground(imagePath))
         }
     }
-    val newAvatarLauncher =
+    val newLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
             uri?.let {
                 context.contentResolver.takePersistableUriPermission(uri, flag)
-                imageUri2Path(context, uri)?.let { path ->
-                    viewModel.dispatch(ProfileViewAction.ChangeAvatar(path))
+                uri2Path(context, uri)?.let { path ->
+                    if (avatarMode)
+                        viewModel.dispatch(ProfileViewAction.ChangeAvatar(path))
+                    else
+                        viewModel.dispatch(ProfileViewAction.ChangeBackground(path))
                 } ?: scaffoldState?.let { popupSnackBar(coroutineScope, it, SNACK_ERROR, "获取文件失败") }
             } ?: scaffoldState?.let { popupSnackBar(coroutineScope, it, SNACK_ERROR, "获取文件失败") }
         }
+
+    var photoUri by remember { mutableStateOf(Uri.EMPTY) }
+    val photoLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
+            Logger.d("$photoUri, take: $it")
+            if (it) {
+                val fileName =
+                    photoUri.path?.substring(photoUri.path?.lastIndexOf("/")?.plus(1) ?: 0)
+                var photoPath = "${context.cacheDir}/$fileName"
+                val presetFile = File(photoPath)
+                // 大于3M的图片处理
+                if (presetFile.length() > 3 * 1024 * 1024)
+                    photoPath = saveBitmapToFile(presetFile)?.absolutePath ?: ""
+
+                if (avatarMode)
+                    viewModel.dispatch(ProfileViewAction.ChangeAvatar(photoPath))
+                else
+                    viewModel.dispatch(ProfileViewAction.ChangeBackground(photoPath))
+            }
+        }
+
 
     // 刷新界面
     LaunchedEffect(key1 = recompose) { if (recompose) recompose = false }
@@ -111,6 +152,7 @@ fun ProfilePage(
 
     val showBottomDialog = remember { mutableStateOf(false) }
     val showGetPermission = remember { mutableStateOf(false) }
+    var showEditPage = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -135,7 +177,10 @@ fun ProfilePage(
                     if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
                         launchSingleTop = true
                     }
-                    else showBottomDialog.value = true
+                    else {
+                        avatarMode = false
+                        showBottomDialog.value = true
+                    }
                 }) {
                 if (profile.background.isBlank()) Image(
                     painter = painterResource(id = R.drawable.unlogin_profile_bg),
@@ -164,13 +209,15 @@ fun ProfilePage(
                         if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
                             launchSingleTop = true
                         }
-                        // TODO 更改用户信息
+                        else showEditPage.value = true
                     },
                     onChangeArthur = {
                         if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
                             launchSingleTop = true
+                        } else {
+                            avatarMode = true
+                            showBottomDialog.value = true
                         }
-                        showBottomDialog.value = true
                     })
                 Spacer(modifier = Modifier.height(20.dp))
                 // 按钮组
@@ -221,10 +268,10 @@ fun ProfilePage(
                                 .padding(start = 10.dp, end = 10.dp, bottom = 20.dp)
                         ) {
                             items(resList) { res ->
-                                ProfileResCard(resName = res.resName,
-                                    resType = res.resType,
-                                    resSize = res.resSize,
-                                    resLink = res.resLink,
+                                ProfileResCard(resName = res.resourceName,
+                                    resType = res.resourceType,
+                                    resSize = res.resourceSize,
+                                    resLink = res.resourceLink,
                                     onClick = {
                                         // TODO 查看资源详情
                                     },
@@ -265,9 +312,9 @@ fun ProfilePage(
                         ) {
                             topicList.forEach { topic ->
                                 item {
-                                    ProfileTopicCard(date = topic.date,
-                                        content = topic.content,
-                                        tags = topic.tags,
+                                    ProfileTopicCard(date = topic.publishTime,
+                                        content = topic.topicContent,
+                                        tags = topic.topicTag,
                                         commentCount = topic.commentCount,
                                         onDel = { /*TODO 删除话题*/ }) {
                                         // TODO 查看话题详情
@@ -303,7 +350,9 @@ fun ProfilePage(
                                             if (profile.id.isBlank()) navController?.navigate(
                                                 AUTH_PAGE
                                             ) { launchSingleTop = true }
-                                            // TODO 发布话题
+                                            else navController?.navigate(PUBLISH_PAGE) {
+                                                launchSingleTop = true
+                                            }
                                         })
                                     .background(AppTheme.colors.schoolBlue)
                                     .padding(vertical = 10.dp, horizontal = 20.dp)
@@ -354,7 +403,7 @@ fun ProfilePage(
     ) {
         MoreActionCard(
             listOf(ActionPair("清除缓存") {
-
+                // TODO 清除缓存
             }, ActionPair("退出登录", true) {
                 viewModel.dispatch(ProfileViewAction.Logout)
                 showSetting = false
@@ -362,27 +411,71 @@ fun ProfilePage(
         )
     }
     if (showGetPermission.value) {
-        if (Build.VERSION.SDK_INT < 33) GrantPermission(isShow = showGetPermission,
-            permission = PermissionType.READ,
-            textDenied = "应用程序需要申请数据读取权限来获取相册中的图片",
-            textBlock = "应用程序需要申请数据读取权限",
-            doAfterPermission = {
-                oldAvatarLauncher.launch(Matisse())
+        if (albumMode) {
+            if (Build.VERSION.SDK_INT < 33) GrantPermission(isShow = showGetPermission,
+                permission = PermissionType.READ,
+                textDenied = "应用程序需要申请数据读取权限来获取相册中的图片",
+                textBlock = "应用程序需要申请数据读取权限",
+                doAfterPermission = {
+                    oldLauncher.launch(Matisse())
+                    showGetPermission.value = false
+                })
+            else {
+                newLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 showGetPermission.value = false
-            })
-        else {
-            newAvatarLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            showGetPermission.value = false
+            }
+        } else {
+            GrantPermission(isShow = showGetPermission,
+                permission = PermissionType.CAMARA,
+                textDenied = "应用程序需要申请相机权限来获取拍摄的图片",
+                textBlock = "应用程序需要申请相机权限",
+                doAfterPermission = {
+                    val file = File.createTempFile(
+                        "photo_${System.currentTimeMillis()}",
+                        ".png",
+                        context.cacheDir
+                    )
+                    photoUri =
+                        FileProvider.getUriForFile(
+                            context,
+                            "${BuildConfig.APPLICATION_ID}.fileprovider",
+                            file
+                        )
+                    Logger.d(photoUri)
+                    photoLauncher.launch(photoUri)
+                    showGetPermission.value = false
+                })
         }
     }
     BottomDialog(
         items = listOf(BottomButtonItem("拍照") {
-            // TODO 拍照
+            showGetPermission.value = true
+            showBottomDialog.value = false
+            albumMode = false
         }, BottomButtonItem("从相册中选择") {
             showGetPermission.value = true
             showBottomDialog.value = false
+            albumMode = true
         }), isShow = showBottomDialog
     )
+    if (isLoading)
+        WarpLoadingDialog()
+
+    ProfileEditCard(
+        isShow = showEditPage,
+        nickname = profile.nickname,
+        tags = profile.tags,
+        onChange = { nickname, tagString ->
+            val tags =
+                tagString.split("(\\s)+".toRegex()).toSet().toList().filter { it.isNotBlank() }
+                    .subList(0, 2)
+            Logger.d("nickname: $nickname, tags: $tags")
+            if (nickname != profile.nickname)
+                viewModel.dispatch(ProfileViewAction.ChangeNickname(nickname))
+            if (tags != profile.tags) {
+                viewModel.dispatch(ProfileViewAction.ChangeTags(tags))
+            }
+        })
 }
 
 @Composable

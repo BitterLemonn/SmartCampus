@@ -3,8 +3,6 @@ package com.lemon.smartcampus.data.api
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lemon.smartcampus.data.common.CommonInterceptor
 import com.lemon.smartcampus.data.common.TokenUrl
-import com.lemon.smartcampus.data.common.UserUrl
-import com.lemon.smartcampus.utils.NoNeedResponse
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json

@@ -1,5 +1,6 @@
 package com.lemon.smartcampus.utils
 
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.orhanobut.logger.Logger
 import retrofit2.HttpException
 import java.net.ConnectException
@@ -18,21 +19,28 @@ object UnifiedExceptionHandler {
                     NetworkState.Error(result.message ?: "未知错误，请联系管理员")
             }
         } catch (e: SocketTimeoutException) {
-            Logger.e(TAG, "链接超时")
+            Logger.e("$TAG:链接超时")
             return NetworkState.Error("网络好像被UFO捉走了QAQ", SocketTimeoutException("网络好像被UFO捉走了QAQ"))
         } catch (e: ConnectException) {
-            Logger.e(TAG, "无法连接到服务器")
-            return NetworkState.Error("服务器离家出走了QAQ", ConnectException("无法连接到服务器"))
+            Logger.e("$TAG:无法连接到服务器")
+            return NetworkState.Error("服务器离家出走了QAQ", ConnectException("服务器离家出走了QAQ"))
         }catch (e: HttpException){
             if (e.code() == 401) {
-                Logger.e(TAG, "token失效")
-                return NetworkState.Error("登录过期啦!", LoginException("token失效"))
+                Logger.e("$TAG:Token失效")
+                return NetworkState.Error("登录过期啦!", LoginException("登录过期啦!"))
             }else return NetworkState.Error("未知错误，请联系管理员", e)
         } catch (e: Exception) {
-            e.message?.let { Logger.e(it) }?:Logger.e(e::class.toString())
+            e.message?.let { Logger.e("$TAG:$it") }?:Logger.e(e::class.toString())
             return NetworkState.Error("未知错误，请联系管理员", e)
         }
     }
-}
 
-class LoginException(message: String): Exception(message)
+    suspend fun <T> handleSuspendWithToken(function: suspend () -> ResponseData<T>): NetworkState<T>{
+        val token = AppContext.profile?.token
+        return if (token.isNullOrBlank())
+            NetworkState.Error("用户信息丢失了哦", LoginException("用户信息丢失了哦"))
+        else handleSuspend { function.invoke() }
+    }
+
+    class LoginException(message: String): Exception(message)
+}

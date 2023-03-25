@@ -7,7 +7,7 @@ import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 
 enum class PermissionType {
-    READ
+    READ, CAMARA
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -22,25 +22,24 @@ fun GrantPermission(
     val permissionGet = rememberPermissionState(
         permission = when (permission) {
             PermissionType.READ -> android.Manifest.permission.READ_EXTERNAL_STORAGE
+            PermissionType.CAMARA -> android.Manifest.permission.CAMERA
         }
+    )
+    val items = listOf(
+        BottomButtonItem("取消") { isShow.value = false },
+        BottomButtonItem("确认") { permissionGet.launchPermissionRequest() }
     )
     when (permissionGet.status) {
         is PermissionStatus.Denied -> {
             val textShow =
                 if ((permissionGet.status as PermissionStatus.Denied).shouldShowRationale) textDenied
                 else textBlock
-            if (isShow.value)
-            HintDialog(
+            BottomHintDialog(
                 hint = textShow,
-                onClickCancel = {
-                    isShow.value = false
-                },
-                onClickCertain = {
-                    permissionGet.launchPermissionRequest()
-                },
-                highLineCertain = true
+                items = items,
+                isShow = isShow
             )
         }
-        is PermissionStatus.Granted -> doAfterPermission.invoke()
+        is PermissionStatus.Granted -> if (isShow.value) doAfterPermission.invoke()
     }
 }

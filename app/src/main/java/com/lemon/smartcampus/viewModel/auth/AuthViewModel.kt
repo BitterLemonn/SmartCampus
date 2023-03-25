@@ -32,6 +32,8 @@ class AuthViewModel : ViewModel() {
             is AuthViewAction.LoginWithToken -> loginWithToken()
             is AuthViewAction.Register -> register()
             is AuthViewAction.RequestToken -> requestToken()
+            is AuthViewAction.CheckForgetCode -> checkForgetToken()
+            is AuthViewAction.ChangePassword -> changePassword()
         }
     }
 
@@ -64,6 +66,7 @@ class AuthViewModel : ViewModel() {
             is NetworkState.Success -> {
                 // 存入全局变量
                 AppContext.profile = result.data
+                Logger.d(result.data)
                 // Room持久化
                 GlobalDataBase.database.profileDao().deleteAll()
                 GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
@@ -169,12 +172,69 @@ class AuthViewModel : ViewModel() {
             else -> {}
         }
     }
+
+    private fun checkForgetToken() {
+        viewModelScope.launch {
+            flow {
+                _viewStates.setState { copy(id = "") }
+                checkForgetTokenLogic()
+                emit("验证码正确")
+            }.onStart {
+                _viewEvents.setEvent(AuthViewEvent.ShowLoadingDialog)
+            }.onEach {
+                if (_viewStates.value.id.isNotBlank())
+                    _viewEvents.setEvent(AuthViewEvent.CheckSuccess)
+            }.catch {
+                _viewEvents.setEvent(AuthViewEvent.ShowToast(it.message!!))
+            }.onCompletion {
+                _viewEvents.setEvent(AuthViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun checkForgetTokenLogic() {
+        val phone = viewStates.value.phone
+        val code = viewStates.value.token
+        if (phone.length < 11) throw Exception("请输入正确的大陆手机号码")
+        if (code.length < 4) throw Exception("请输入正确的验证码")
+        when (val result = repository.checkForgetToken(phone = phone, code = code)) {
+            is NetworkState.Error -> throw Exception(result.msg)
+            is NetworkState.Success -> _viewStates.setState { copy(id = result.data!!) }
+        }
+    }
+
+    private fun changePassword() {
+        viewModelScope.launch {
+            flow {
+                changePasswordLogic()
+                emit("修改成功")
+            }.catch {
+                _viewEvents.setEvent(AuthViewEvent.ShowToast(it.message!!))
+            }.onCompletion {
+                _viewEvents.setEvent(AuthViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun changePasswordLogic() {
+        val userId = viewStates.value.id
+        val password = viewStates.value.password
+        if (password.length < 6) throw Exception("密码长度不得小于6位")
+        _viewEvents.setEvent(AuthViewEvent.ShowLoadingDialog)
+        if (userId.isBlank())
+            throw Exception("获取id失败")
+        when (val result = repository.changePassword(password = md5(password), userId = userId)) {
+            is NetworkState.Success -> _viewEvents.setEvent(AuthViewEvent.ChangeSuccess)
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
+    }
 }
 
 data class AuthViewState(
     val phone: String = "",
     val password: String = "",
     val token: String = "",
+    val id: String = ""
 )
 
 sealed class AuthViewAction {
@@ -186,6 +246,8 @@ sealed class AuthViewAction {
     object LoginWithToken : AuthViewAction()
     object Register : AuthViewAction()
     object RequestToken : AuthViewAction()
+    object CheckForgetCode : AuthViewAction()
+    object ChangePassword : AuthViewAction()
 }
 
 sealed class AuthViewEvent {
@@ -193,5 +255,7 @@ sealed class AuthViewEvent {
     object DismissLoadingDialog : AuthViewEvent()
     object TransIntent : AuthViewEvent()
     object AlreadyRequestCode : AuthViewEvent()
+    object CheckSuccess : AuthViewEvent()
+    object ChangeSuccess : AuthViewEvent()
     data class ShowToast(val msg: String) : AuthViewEvent()
 }

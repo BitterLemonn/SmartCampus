@@ -8,6 +8,7 @@
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:name=".data.database.database.GlobalDataBase"
@@ -23,7 +24,7 @@
         <!--注册内容提供器-->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.lemon.smartcompus.fileprovider"
+            android:authorities="com.lemon.smartcampus.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -34,7 +35,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.SmartCampus"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

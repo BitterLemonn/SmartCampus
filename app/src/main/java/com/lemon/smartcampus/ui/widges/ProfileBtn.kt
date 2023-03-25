@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -12,13 +13,17 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
-import com.lemon.smartcampus.ui.theme.AppTheme
+import com.lemon.smartcampus.ui.theme.HintLightNight
+import com.lemon.smartcampus.ui.theme.TextDarkDay
+import com.lemon.smartcampus.ui.theme.TextLightNight
 
 @Composable
 fun ProfileBtn(
@@ -53,10 +58,15 @@ fun ProfileBtn(
                 Image(
                     painter = painterResource(id = img),
                     contentDescription = text,
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(25.dp),
+                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.LightGray) else null
                 )
                 Spacer(modifier = Modifier.width(13.dp))
-                Text(text = text, fontSize = 14.sp, color = AppTheme.colors.textDarkColor)
+                Text(
+                    text = text,
+                    fontSize = 14.sp,
+                    color = if (isSystemInDarkTheme()) Color.LightGray else TextDarkDay
+                )
             }
         }
     }

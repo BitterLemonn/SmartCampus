@@ -9,9 +9,10 @@ const val HOME_PAGE = "HOME_PAGE"
 const val AUTH_PAGE = "AUTH_PAGE"
 const val PUBLISH_PAGE = "PUBLISH_PAGE"
 const val DETAILS_PAGE = "DETAILS_PAGE"
+const val COURSE_PAGE = "COURSE_PAGE"
 
 // 每页数据量
-const val COUNT_PER_PAGE = 5
+const val COUNT_PER_PAGE = 8
 
 // JsonConverter
 object JsonConverter {

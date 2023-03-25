@@ -6,11 +6,15 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,13 +38,13 @@ fun CoverPage(
             second -= 1
         }
         navController?.popBackStack()
-        navController?.navigate(HOME_PAGE){
+        navController?.navigate(HOME_PAGE) {
             popUpToRoute
             launchSingleTop = true
         }
     }
-    LaunchedEffect(key1 = Unit){
-        this.launch(Dispatchers.IO){
+    LaunchedEffect(key1 = Unit) {
+        this.launch(Dispatchers.IO) {
             val profile = GlobalDataBase.database.profileDao().getAll()
             if (profile != null && profile.isNotEmpty())
                 AppContext.profile = profile[0]
@@ -56,7 +60,12 @@ fun CoverPage(
             contentDescription = "logo",
             modifier = Modifier
                 .size(200.dp)
-                .align(Alignment.Center)
+                .clip(CircleShape)
+                .align(Alignment.Center),
+            colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                Color.Gray,
+                BlendMode.Multiply
+            ) else null
         )
     }
 }

@@ -5,13 +5,17 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.lemon.smartcampus.data.database.dao.ProfileDao
+import com.lemon.smartcampus.data.database.dao.UserResDao
+import com.lemon.smartcampus.data.database.dao.UserTopicDao
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
+import com.lemon.smartcampus.data.database.entities.TopicEntity
 
 @Database(
     entities = [
-        ProfileEntity::class
+        ProfileEntity::class,
+        TopicEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDataBase : RoomDatabase() {
@@ -30,4 +34,9 @@ abstract class AppDataBase : RoomDatabase() {
     }
 
     abstract fun profileDao(): ProfileDao
+
+    abstract fun resDao(): UserResDao
+
+    abstract fun topicDao(): UserTopicDao
+
 }

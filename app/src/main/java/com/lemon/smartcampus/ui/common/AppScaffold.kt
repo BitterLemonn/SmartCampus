@@ -23,6 +23,7 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.lemon.smartcampus.ui.authPage.AuthPage
+import com.lemon.smartcampus.ui.course.CoursePage
 import com.lemon.smartcampus.ui.coverPage.CoverPage
 import com.lemon.smartcampus.ui.discoverPage.publishPage.PublishPage
 import com.lemon.smartcampus.ui.discoverPage.tabPage.TopicDetailPage
@@ -73,7 +74,7 @@ fun AppScaffold() {
                     darkIcons = isSystemInDarkTheme()
                 )
                 rememberSystemUiController().setStatusBarColor(
-                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
                 )
                 HomePage(navController = navController, scaffoldState = scaffoldState)
             }
@@ -110,7 +111,7 @@ fun AppScaffold() {
                 }
             ) {
                 rememberSystemUiController().setSystemBarsColor(
-                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
                 PublishPage(navController = navController, scaffoldState = scaffoldState)
             }
@@ -142,12 +143,26 @@ fun AppScaffold() {
                     ) { IntSize.Zero } + fadeOut()
                 }
             ) {
+                rememberSystemUiController().setNavigationBarColor(
+                    AppTheme.colors.background,
+                    darkIcons = isSystemInDarkTheme()
+                )
                 val argument = it.arguments
                 val id = argument?.getString("id") ?: ""
                 TopicDetailPage(
                     navController = navController,
                     scaffoldState = scaffoldState,
                     id = id
+                )
+            }
+            composable(route = COURSE_PAGE) {
+                rememberSystemUiController().setStatusBarColor(
+                    if (!isSystemInDarkTheme()) Color(0xFFFFF3D8) else Color(0xFF575249),
+                    darkIcons = isSystemInDarkTheme()
+                )
+                CoursePage(navController = navController)
+                rememberSystemUiController().setNavigationBarColor(
+                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
             }
         }

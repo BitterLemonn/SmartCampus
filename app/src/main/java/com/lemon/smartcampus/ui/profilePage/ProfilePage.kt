@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -25,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -41,14 +44,10 @@ import coil.request.ImageRequest
 import com.lemon.smartcampus.BuildConfig
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
-import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
-import com.lemon.smartcampus.utils.AUTH_PAGE
-import com.lemon.smartcampus.utils.PUBLISH_PAGE
-import com.lemon.smartcampus.utils.saveBitmapToFile
-import com.lemon.smartcampus.utils.uri2Path
+import com.lemon.smartcampus.utils.*
 import com.lemon.smartcampus.viewModel.profile.ProfileViewAction
 import com.lemon.smartcampus.viewModel.profile.ProfileViewEvent
 import com.lemon.smartcampus.viewModel.profile.ProfileViewModel
@@ -75,6 +74,7 @@ fun ProfilePage(
 
     var recompose by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = Unit) {
+        viewModel.dispatch(ProfileViewAction.GetUserPost)
         viewModel.viewEvents.observeEvent(lifecycleOwner) {
             when (it) {
                 is ProfileViewEvent.ShowToast -> scaffoldState?.let { scaffold ->
@@ -145,8 +145,6 @@ fun ProfilePage(
     // 刷新界面
     LaunchedEffect(key1 = recompose) { if (recompose) recompose = false }
 
-    val resList = remember { mutableStateListOf<TopicEntity>() }
-    val topicList = remember { mutableStateListOf<TopicEntity>() }
     val animateAlpha by animateFloatAsState(targetValue = if (recompose) 0.99f else 1f)
     var showSetting by remember { mutableStateOf(false) }
 
@@ -186,14 +184,22 @@ fun ProfilePage(
                     painter = painterResource(id = R.drawable.unlogin_profile_bg),
                     contentDescription = "bg",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                        Color.Gray,
+                        BlendMode.Multiply
+                    ) else null
                 )
                 else AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current).data(profile.background)
                         .build(),
                     contentDescription = "bg",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                        Color.Gray,
+                        BlendMode.Multiply
+                    ) else null
                 )
             }
             Column(
@@ -230,25 +236,29 @@ fun ProfilePage(
                     ProfileBtn(
                         img = R.drawable.calendar2,
                         text = "我的课程",
-                        backgroundColor = Color(0xFFFFF3D8)
+                        backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFFFF3D8)
+                        else Color(0xFF635D53)
                     ) {
-                        // TODO 我的课程
+                        navController?.navigate(COURSE_PAGE) { launchSingleTop }
                     }
                     ProfileBtn(
-                        img = R.drawable.memo, text = "我的备忘", backgroundColor = Color(0xFFD0F2FF)
+                        img = R.drawable.memo,
+                        text = "我的备忘",
+                        backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFD0F2FF)
+                        else Color(0xFF6D7F86)
                     ) {
                         // TODO 我的备忘
                     }
                 }
                 // 我的发布
-                if (resList.isNotEmpty()) {
+                if (state.resList.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Column(
                         modifier = Modifier
                             .padding(horizontal = 23.dp)
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFEDEDED))
+                            .background(AppTheme.colors.card)
                     ) {
                         Box(
                             modifier = Modifier
@@ -267,13 +277,14 @@ fun ProfilePage(
                                 .fillMaxWidth()
                                 .padding(start = 10.dp, end = 10.dp, bottom = 20.dp)
                         ) {
-                            items(resList) { res ->
+                            items(state.resList) { res ->
                                 ProfileResCard(resName = res.resourceName,
                                     resType = res.resourceType,
                                     resSize = res.resourceSize,
                                     resLink = res.resourceLink,
                                     onClick = {
-                                        // TODO 查看资源详情
+                                        AppContext.topicDetail += mapOf(Pair(res.topicId, res))
+                                        navController?.navigate("$DETAILS_PAGE/${res.topicId}")
                                     },
                                     onDownload = {
                                         // TODO 下载资源
@@ -284,14 +295,14 @@ fun ProfilePage(
                     }
                 }
                 // 我的话题
-                if (topicList.isNotEmpty()) {
+                if (state.topicList.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Column(
                         modifier = Modifier
                             .padding(horizontal = 23.dp)
                             .fillMaxSize()
                             .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
-                            .background(Color(0xFFEDEDED))
+                            .background(AppTheme.colors.card)
                     ) {
                         Box(
                             modifier = Modifier
@@ -310,21 +321,21 @@ fun ProfilePage(
                                 .fillMaxSize()
                                 .padding(horizontal = 15.dp)
                         ) {
-                            topicList.forEach { topic ->
-                                item {
-                                    ProfileTopicCard(date = topic.publishTime,
-                                        content = topic.topicContent,
-                                        tags = topic.topicTag,
-                                        commentCount = topic.commentCount,
-                                        onDel = { /*TODO 删除话题*/ }) {
-                                        // TODO 查看话题详情
-                                    }
-                                    Spacer(modifier = Modifier.height(10.dp))
+                            items(state.topicList) {
+                                ProfileTopicCard(date = it.publishTime,
+                                    content = it.topicContent,
+                                    tags = it.topicTag,
+                                    commentCount = it.commentCount,
+                                    onDel = { viewModel.dispatch(ProfileViewAction.DelPost(it.topicId)) }) {
+                                    AppContext.topicDetail += mapOf(Pair(it.topicId, it))
+                                    navController?.navigate("$DETAILS_PAGE/${it.topicId}")
                                 }
+                                Spacer(modifier = Modifier.height(10.dp))
+
                             }
                         }
                     }
-                } else if (resList.isEmpty() && topicList.isEmpty()) {
+                } else if (state.resList.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Image(
@@ -378,7 +389,7 @@ fun ProfilePage(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(AppTheme.colors.card)
                     .clickable(indication = rememberRipple(),
                         interactionSource = MutableInteractionSource(),
                         onClick = {

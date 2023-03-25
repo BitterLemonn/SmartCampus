@@ -50,10 +50,6 @@ fun HomePage(
 
     LaunchedEffect(key1 = nowSelect) {
         pageState.animateScrollToPage(nowSelect)
-        if (nowSelect == 2)
-            uiController.setStatusBarColor(Color.Transparent, !isNight)
-        else
-            uiController.setStatusBarColor(if (!isNight) BackgroundDay else Color.Black)
     }
 
     LaunchedEffect(key1 = pageState) {

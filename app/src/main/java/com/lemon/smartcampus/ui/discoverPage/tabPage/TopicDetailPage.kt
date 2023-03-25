@@ -1,6 +1,5 @@
 package com.lemon.smartcampus.ui.discoverPage.tabPage
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -9,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -16,13 +16,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.lemon.smartcampus.data.database.entities.CommentEntity
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.globalData.AppContext
+import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
 import com.lemon.smartcampus.viewModel.topic.DetailViewAction
 import com.lemon.smartcampus.viewModel.topic.DetailViewEvent
@@ -44,7 +46,7 @@ fun TopicDetailPage(
     var isShow by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
 
-    val host = AppContext.topicDetail[id] ?: TopicEntity.getEmpty()
+    val host = AppContext.topicDetail[id] ?: TopicEntity()
     val state by viewModel.viewStates.collectAsState()
     val lazyState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -71,6 +73,7 @@ fun TopicDetailPage(
                             popupSnackBar(scope, scaffoldState, SNACK_ERROR, it.msg)
                     }
                 }
+                is DetailViewEvent.TransIntent -> navController?.popBackStack()
             }
         }
     }
@@ -104,9 +107,11 @@ fun TopicDetailPage(
             if (AppContext.profile?.id == host.userId) isShow = true
         })
 
-        Box(modifier = Modifier
-            .pullRefresh(pullState)
-            .weight(1f)) {
+        Box(
+            modifier = Modifier
+                .pullRefresh(pullState)
+                .weight(1f)
+        ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,6 +122,18 @@ fun TopicDetailPage(
                 items(state.commentList) {
                     CommentSubCard(comment = it)
                 }
+                if (state.loadAll || state.loading)
+                    item {
+                        Text(
+                            text = if (state.loading) "正在加载..." else "已加载全部评论",
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textDarkColor,
+                            modifier = Modifier
+                                .padding(vertical = 20.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
             }
             PullRefreshIndicator(loading, pullState, Modifier.align(Alignment.TopCenter))
         }
@@ -131,9 +148,12 @@ fun TopicDetailPage(
     if (host.userId == AppContext.profile?.id && host.userId.isNotBlank())
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
             MoreActionCard(listOf(ActionPair("删除话题") {
-                // TODO 删除
+                viewModel.dispatch(DetailViewAction.DelPost)
             }), isShow)
         }
+
+    if (loading)
+        WarpLoadingDialog()
 }
 
 @Composable

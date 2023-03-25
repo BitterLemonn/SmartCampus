@@ -20,5 +20,6 @@ data class ProfileEntity(
     @ColumnInfo val nickname: String,
     @ColumnInfo val background: String,
     @ColumnInfo val avatar: String,
-    @ColumnInfo val tags: List<String>
+    @ColumnInfo val tags: List<String>,
+    @ColumnInfo val lastUpdateTime: Long = 0
 ) : Parcelable

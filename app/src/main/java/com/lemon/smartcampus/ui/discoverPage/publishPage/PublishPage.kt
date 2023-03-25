@@ -189,6 +189,7 @@ fun PublishPage(
                 // 添加资源
                 Card(
                     modifier = Modifier
+                        .padding(bottom = 100.dp)
                         .height(50.dp)
                         .width(animateWidth)
                         .clip(RoundedCornerShape(100.dp)),

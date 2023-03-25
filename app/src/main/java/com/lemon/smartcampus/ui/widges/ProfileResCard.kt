@@ -1,8 +1,6 @@
 package com.lemon.smartcampus.ui.widges
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -16,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -24,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
+import com.lemon.smartcampus.ui.theme.CardDay
+import com.lemon.smartcampus.ui.theme.TextLightNight
+import java.text.DecimalFormat
 
 @Composable
 fun ProfileResCard(
@@ -41,9 +43,14 @@ fun ProfileResCard(
             .clip(RoundedCornerShape(8.dp))
             .clickable(
                 interactionSource = MutableInteractionSource(), indication = rememberRipple()
-            ) { onClick.invoke() },
+            ) { onClick.invoke() }
+            .border(
+                width = 1.dp,
+                color = AppTheme.colors.hintDarkColor,
+                shape = RoundedCornerShape(8.dp)
+            ),
         elevation = 10.dp,
-        shape = RoundedCornerShape(8.dp)
+        backgroundColor = if (isSystemInDarkTheme()) TextLightNight else CardDay
     ) {
         Column(
             modifier = Modifier
@@ -68,7 +75,11 @@ fun ProfileResCard(
                 modifier = Modifier.padding(horizontal = 9.dp),
                 textAlign = TextAlign.Center
             )
-            Text(text = "$resSize MB", fontSize = 10.sp, color = AppTheme.colors.textLightColor)
+            Text(
+                text = "${DecimalFormat("0.##").format(resSize)} MB",
+                fontSize = 10.sp,
+                color = AppTheme.colors.textDarkColor
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,13 +91,14 @@ fun ProfileResCard(
                     ),
                 contentAlignment = Alignment.TopCenter,
             ) {
-                Divider(color = Color(0xFFEAEAEA), thickness = 1.dp)
+                Divider(color = AppTheme.colors.hintLightColor, thickness = 1.dp)
                 Image(
                     painter = painterResource(id = R.drawable.download2),
                     contentDescription = "download",
                     modifier = Modifier
                         .padding(vertical = 5.dp)
-                        .size(20.dp)
+                        .size(20.dp),
+                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.Gray) else null
                 )
             }
         }

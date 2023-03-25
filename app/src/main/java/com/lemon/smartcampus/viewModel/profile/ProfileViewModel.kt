@@ -6,11 +6,13 @@ import com.lemon.smartcampus.data.database.database.GlobalDataBase
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.data.repository.ProfileRepository
+import com.lemon.smartcampus.data.repository.TopicRepository
 import com.lemon.smartcampus.utils.NetworkState
 import com.lemon.smartcampus.utils.logoutLocal
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
+import com.zj.mvi.core.setState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -35,6 +37,8 @@ class ProfileViewModel : ViewModel() {
             is ProfileViewAction.ChangeBackground -> changeUserImg(viewAction.path, false)
             is ProfileViewAction.ChangeNickname -> changeNickname(viewAction.name)
             is ProfileViewAction.ChangeTags -> changeTags(viewAction.tags)
+            is ProfileViewAction.GetUserPost -> getUserPost()
+            is ProfileViewAction.DelPost -> delPost(topicId = viewAction.topicId)
         }
     }
 
@@ -65,7 +69,11 @@ class ProfileViewModel : ViewModel() {
         GlobalDataBase.database.profileDao().deleteAll()
         when (val result = repository.logout(token)) {
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
-            else -> {}
+            else -> {
+                _viewStates.setState { copy(resList = listOf(), topicList = listOf()) }
+                GlobalDataBase.database.resDao().deleteAll()
+                GlobalDataBase.database.topicDao().deleteAll()
+            }
         }
     }
 
@@ -198,6 +206,90 @@ class ProfileViewModel : ViewModel() {
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
         }
     }
+
+    private fun getUserPost() {
+        // 每5min刷新一次数据
+        if (!AppContext.profile?.id.isNullOrBlank()
+            && System.currentTimeMillis() - ((AppContext.profile?.lastUpdateTime)
+                ?: 0L) > 5 * 60 * 1_000
+        )
+            viewModelScope.launch {
+                flow {
+                    getUserTopic()
+                    getUserRes()
+                    emit("获取成功")
+                }.catch {
+                    _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
+                }.flowOn(Dispatchers.IO).collect()
+            }
+        else {
+            viewModelScope.launch(Dispatchers.IO) {
+                _viewStates.setState {
+                    copy(
+                        topicList = GlobalDataBase.database.topicDao().getAll() ?: listOf(),
+                        resList = GlobalDataBase.database.resDao().getAll() ?: listOf()
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun getUserTopic() {
+        when (val result = repository.getUserTopic()) {
+            is NetworkState.Success -> {
+                _viewStates.setState { copy(topicList = result.data!!) }
+                AppContext.profile =
+                    AppContext.profile?.copy(lastUpdateTime = System.currentTimeMillis())
+                // room持久化
+                GlobalDataBase.database.topicDao().deleteAll()
+                GlobalDataBase.database.topicDao().insertAll(viewStates.value.topicList)
+            }
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
+    }
+
+    private suspend fun getUserRes() {
+        when (val result = repository.getUserRes()) {
+            is NetworkState.Success -> {
+                _viewStates.setState { copy(resList = result.data!!) }
+                AppContext.profile =
+                    AppContext.profile?.copy(lastUpdateTime = System.currentTimeMillis())
+                // room持久化
+                GlobalDataBase.database.resDao().deleteAll()
+                GlobalDataBase.database.resDao().insertAll(viewStates.value.resList)
+            }
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
+    }
+
+    private fun delPost(topicId: String) {
+        viewModelScope.launch {
+            flow {
+                delPostLogic(topicId)
+                emit("删除成功")
+            }.onStart {
+                _viewEvents.setEvent(ProfileViewEvent.ShowLoadingDialog)
+            }.onEach {
+                _viewEvents.setEvent(ProfileViewEvent.Recompose)
+            }.catch {
+                _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
+            }.onCompletion {
+                _viewEvents.setEvent(ProfileViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun delPostLogic(topicId: String) {
+        when (val result = TopicRepository.getInstance().delPost(topicId)) {
+            is NetworkState.Success -> {
+                val list = viewStates.value.topicList.filter { it.topicId != topicId }
+                _viewStates.setState { copy(topicList = list) }
+                // room 持久化
+                GlobalDataBase.database.resDao().delete(topicId)
+            }
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
+    }
 }
 
 data class ProfileViewState(
@@ -211,6 +303,8 @@ sealed class ProfileViewAction {
     data class ChangeBackground(val path: String) : ProfileViewAction()
     data class ChangeNickname(val name: String) : ProfileViewAction()
     data class ChangeTags(val tags: List<String>) : ProfileViewAction()
+    object GetUserPost : ProfileViewAction()
+    data class DelPost(val topicId: String) : ProfileViewAction()
 }
 
 sealed class ProfileViewEvent {

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,9 +44,10 @@ fun BottomNaviItem(
             Image(
                 painter = painterResource(id = imgRes),
                 contentDescription = text,
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(30.dp),
+                colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.Gray) else null
             )
-            Text(text = text, color = AppTheme.colors.textLightColor, fontSize = 12.sp)
+            Text(text = text, color = AppTheme.colors.textDarkColor, fontSize = 12.sp)
         }
         if (isSelected)
             Canvas(modifier = Modifier.size(25.dp)) {

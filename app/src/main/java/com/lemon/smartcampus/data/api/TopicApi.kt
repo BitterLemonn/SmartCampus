@@ -3,6 +3,7 @@ package com.lemon.smartcampus.data.api
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lemon.smartcampus.data.common.CommonInterceptor
 import com.lemon.smartcampus.data.common.TopicUrl
+import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.database.networkEntities.CommentResponseEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicCommentEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicPublishEntity
@@ -54,6 +55,23 @@ interface TopicApi {
         @Header("token") token: String,
         @Body body: TopicCommentEntity
     ): ResponseData<String>
+
+    @DELETE("deleteTopic/{topicId}")
+    suspend fun delPost(
+        @Header("token") token: String,
+        @Path("topicId") topicId: String
+    ): ResponseData<String>
+
+    @GET("userTopicList")
+    suspend fun getUserTopic(
+        @Header("token") token: String,
+    ): ResponseData<List<TopicEntity>>
+
+    @GET("userResourceList")
+    suspend fun getUserResource(
+        @Header("token") token: String,
+    ): ResponseData<List<TopicEntity>>
+
 
     companion object {
         /**

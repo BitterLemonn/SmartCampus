@@ -123,7 +123,7 @@ fun DiscoverPage(
             modifier = Modifier
                 .absolutePadding(
                     left = maxWidth * 0.8f,
-                    top = maxHeight * 0.9f
+                    top = maxHeight * 0.8f
                 )
                 .size(50.dp)
         ) {

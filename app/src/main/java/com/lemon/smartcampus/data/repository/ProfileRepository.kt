@@ -1,6 +1,8 @@
 package com.lemon.smartcampus.data.repository
 
+import com.lemon.smartcampus.data.api.TopicApi
 import com.lemon.smartcampus.data.api.UserApi
+import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.database.networkEntities.ChangeNicknameEntity
 import com.lemon.smartcampus.data.database.networkEntities.ChangeTagsEntity
 import com.lemon.smartcampus.data.globalData.AppContext
@@ -61,6 +63,20 @@ class ProfileRepository {
         val token = AppContext.profile?.token
         return UnifiedExceptionHandler.handleSuspendWithToken {
             UserApi.create().changeTags(token = token!!, body = body)
+        }
+    }
+
+    suspend fun getUserTopic(): NetworkState<List<TopicEntity>> {
+        val token = AppContext.profile?.token
+        return UnifiedExceptionHandler.handleSuspendWithToken {
+            TopicApi.create().getUserTopic(token!!)
+        }
+    }
+
+    suspend fun getUserRes(): NetworkState<List<TopicEntity>> {
+        val token = AppContext.profile?.token
+        return UnifiedExceptionHandler.handleSuspendWithToken {
+            TopicApi.create().getUserResource(token!!)
         }
     }
 }

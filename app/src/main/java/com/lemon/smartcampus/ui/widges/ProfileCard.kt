@@ -72,10 +72,10 @@ fun ProfileCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFCACACA))
-                                .padding(horizontal = 10.dp, vertical = 2.dp)
+                                .background(AppTheme.colors.card)
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
-                            Text(text = tag, fontSize = 10.sp, color = Color.White)
+                            Text(text = tag, fontSize = 10.sp, color = AppTheme.colors.textDarkColor)
                         }
                     }
                 }

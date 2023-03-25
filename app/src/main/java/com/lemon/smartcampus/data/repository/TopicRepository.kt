@@ -8,6 +8,9 @@ import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.COUNT_PER_PAGE
 import com.lemon.smartcampus.utils.NetworkState
 import com.lemon.smartcampus.utils.UnifiedExceptionHandler
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class TopicRepository {
     companion object {
@@ -33,20 +36,27 @@ class TopicRepository {
     suspend fun getCommentList(curPage: Int, topicId: String): NetworkState<CommentResponseEntity> {
         return UnifiedExceptionHandler.handleSuspend {
             TopicApi.create()
-                .getCommentList(curPage = curPage, count = 10, id = topicId)
+                .getCommentList(curPage = curPage, count = COUNT_PER_PAGE, id = topicId)
         }
     }
 
     suspend fun sendChat(chat: String, topicId: String): NetworkState<String> {
         val userId = AppContext.profile!!.id
-        val token = AppContext.profile!!.token
+        val token = AppContext.profile?.token
         val body = TopicCommentEntity(
             userId = userId,
             topicId = topicId,
             comment = chat
         )
         return UnifiedExceptionHandler.handleSuspendWithToken {
-            TopicApi.create().sendComment(token = token, body = body)
+            TopicApi.create().sendComment(token = token!!, body = body)
+        }
+    }
+
+    suspend fun delPost(topicId: String): NetworkState<String>{
+        val token = AppContext.profile?.token
+        return UnifiedExceptionHandler.handleSuspendWithToken {
+            TopicApi.create().delPost(token = token!!, topicId = topicId)
         }
     }
 }

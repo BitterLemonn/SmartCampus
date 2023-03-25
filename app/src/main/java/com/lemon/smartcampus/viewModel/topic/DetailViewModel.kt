@@ -29,6 +29,7 @@ class DetailViewModel : ViewModel() {
             is DetailViewAction.UpdateChat -> _viewStates.setState { copy(chat = viewAction.chat) }
             is DetailViewAction.GetNextPage -> getPage(false)
             is DetailViewAction.Refresh -> getPage(true)
+            is DetailViewAction.DelPost -> delPost()
         }
     }
 
@@ -70,28 +71,21 @@ class DetailViewModel : ViewModel() {
             }.onStart {
                 if (isRefresh) _viewEvents.setEvent(DetailViewEvent.ShowLoadingDialog)
             }.catch {
-                if (it is AllLoadException) {
-                    if (!viewStates.value.atTop) {
-                        _viewEvents.setEvent(
-                            DetailViewEvent.ShowToast("已加载全部评论", true)
-                        )
-                        _viewStates.setState { copy(throwToast = true) }
-                    }
-                } else _viewEvents.setEvent(
                     DetailViewEvent.ShowToast(it.message!!, false)
-                )
             }.onCompletion { _viewEvents.setEvent(DetailViewEvent.DismissLoadingDialog) }
                 .flowOn(Dispatchers.IO).collect()
         }
     }
 
     private suspend fun getPageLogic(isRefresh: Boolean) {
-        if (isRefresh) _viewStates.setState { copy(loadAll = false, throwToast = false) }
-        if (viewStates.value.loadAll && !viewStates.value.throwToast) throw AllLoadException("已加载全部页面")
+        if (isRefresh) _viewStates.setState { copy(loadAll = false) }
+        if (viewStates.value.loading || viewStates.value.loadAll) return
 
         val loadPage = if (isRefresh) 1 else viewStates.value.curPage + 1
         val topicId = viewStates.value.topicId
         if (topicId == "-1") throw Exception("页面被外星人带走了,请返回重试")
+
+        _viewStates.setState { copy(loading = true) }
         when (val result = repository.getCommentList(loadPage, topicId)) {
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
             is NetworkState.Success -> {
@@ -101,6 +95,7 @@ class DetailViewModel : ViewModel() {
                 _viewStates.setState {
                     copy(
                         curPage = data.currPage,
+                        loading = false,
                         loadAll = data.currPage == data.totalPage,
                         commentList = commentList
                     )
@@ -110,9 +105,29 @@ class DetailViewModel : ViewModel() {
         }
     }
 
-    private suspend fun delPostLogic(){
-        val topicId = viewStates.value.topicId
+    private fun delPost() {
+        viewModelScope.launch {
+            flow {
+                delPostLogic()
+                emit("删除成功")
+            }.onStart {
+                _viewEvents.setEvent(DetailViewEvent.ShowLoadingDialog)
+            }.onEach {
+                _viewEvents.setEvent(DetailViewEvent.TransIntent)
+            }.catch {
+                _viewEvents.setEvent(DetailViewEvent.ShowToast(it.message!!, false))
+            }.onCompletion {
+                _viewEvents.setEvent(DetailViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
 
+    private suspend fun delPostLogic() {
+        val topicId = viewStates.value.topicId
+        when (val result = repository.delPost(topicId)) {
+            is NetworkState.Success -> {}
+            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
+        }
     }
 
 }
@@ -122,9 +137,9 @@ data class DetailViewState(
     val chat: String = "",
     val commentList: List<CommentEntity> = listOf(),
     val curPage: Int = 1,
+    val loading: Boolean = false,
     val atTop: Boolean = false,
-    val loadAll: Boolean = false,
-    val throwToast: Boolean = false
+    val loadAll: Boolean = false
 )
 
 sealed class DetailViewAction {
@@ -134,12 +149,12 @@ sealed class DetailViewAction {
     object GetNextPage : DetailViewAction()
     object Refresh : DetailViewAction()
     object SendChat : DetailViewAction()
+    object DelPost : DetailViewAction()
 }
 
 sealed class DetailViewEvent {
     object ShowLoadingDialog : DetailViewEvent()
     object DismissLoadingDialog : DetailViewEvent()
     data class ShowToast(val msg: String, val success: Boolean) : DetailViewEvent()
+    object TransIntent : DetailViewEvent()
 }
-
-class AllLoadException(msg: String) : Exception(msg)

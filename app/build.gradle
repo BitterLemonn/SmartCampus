@@ -103,4 +103,6 @@ dependencies {
     implementation "androidx.paging:paging-compose:1.0.0-alpha18"
     // 下拉加载
     implementation "com.google.accompanist:accompanist-swiperefresh:0.30.0"
+    // wheel picker
+    implementation 'com.github.zj565061763:compose-wheel-picker:1.0.0-alpha14'
 }

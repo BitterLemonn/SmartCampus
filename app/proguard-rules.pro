@@ -21,8 +21,9 @@
 #-renamesourcefileattribute SourceFile
 
 #保留 D8CommandBuilder 和它的全部方法
--keep class com.lemon.smartcampus.* {
-  <methods>;
+-keep class com.lemon.smartcampus.**{
+    <fields>;
+    <methods>;
 }
 #保留 kotlin.Metadata 注解从而在保留项目上维持元数据
 -keepattributes RuntimeVisibleAnnotations

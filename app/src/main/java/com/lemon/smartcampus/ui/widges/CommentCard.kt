@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ fun CommentHostCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp)
-            .heightIn(max = 300.dp),
+            .heightIn(max = 500.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // 正常显示
@@ -111,21 +112,23 @@ fun CommentHostCard(
             Column {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     LazyRow(verticalAlignment = Alignment.CenterVertically) {
-                        item {
-                            Image(
-                                painter = painterResource(id = R.drawable.tag),
-                                contentDescription = "tag",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                        }
-                        items(topic.topicTag) {
-                            Text(
-                                text = "#$it",
-                                fontSize = 12.sp,
-                                color = AppTheme.colors.textLightColor
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
+                        if (topic.topicTag.isNotEmpty()) {
+                            item {
+                                Image(
+                                    painter = painterResource(id = R.drawable.tag),
+                                    contentDescription = "tag",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                            }
+                            items(topic.topicTag) {
+                                Text(
+                                    text = "#$it",
+                                    fontSize = 12.sp,
+                                    color = AppTheme.colors.textLightColor
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                            }
                         }
                     }
                     Row(
@@ -136,7 +139,9 @@ fun CommentHostCard(
                         Text(
                             text = "${topic.commentCount}",
                             color = AppTheme.colors.textLightColor,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            modifier = Modifier.width(40.dp),
+                            textAlign = TextAlign.End
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Image(

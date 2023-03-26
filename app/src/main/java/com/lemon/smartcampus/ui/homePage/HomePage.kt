@@ -27,7 +27,7 @@ private object PageList {
         index: Int, navController: NavController?, scaffoldState: ScaffoldState?
     ): @Composable () -> Unit {
         if (pageList.isEmpty()) pageList = listOf(
-            { InfoPage(navController = navController) },
+            { InfoPage(navController = navController, scaffoldState = scaffoldState) },
             { DiscoverPage(navController = navController, scaffoldState = scaffoldState) },
             { ProfilePage(navController = navController, scaffoldState = scaffoldState) }
         )

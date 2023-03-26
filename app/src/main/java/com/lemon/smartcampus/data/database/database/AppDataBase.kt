@@ -4,16 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.lemon.smartcampus.data.database.dao.CourseDao
 import com.lemon.smartcampus.data.database.dao.ProfileDao
 import com.lemon.smartcampus.data.database.dao.UserResDao
 import com.lemon.smartcampus.data.database.dao.UserTopicDao
+import com.lemon.smartcampus.data.database.entities.CourseEntity
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 
 @Database(
     entities = [
         ProfileEntity::class,
-        TopicEntity::class
+        TopicEntity::class,
+        CourseEntity::class
     ],
     version = 2,
     exportSchema = false
@@ -38,5 +41,7 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun resDao(): UserResDao
 
     abstract fun topicDao(): UserTopicDao
+
+    abstract fun courseDao(): CourseDao
 
 }

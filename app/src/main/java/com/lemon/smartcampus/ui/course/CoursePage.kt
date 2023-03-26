@@ -1,12 +1,14 @@
 package com.lemon.smartcampus.ui.course
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -14,47 +16,92 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.ColoredTitleBar
+import com.lemon.smartcampus.ui.widges.CourseCard
+import com.lemon.smartcampus.ui.widges.SNACK_WARN
+import com.lemon.smartcampus.ui.widges.popupSnackBar
+import com.lemon.smartcampus.utils.COURSE_EDIT_PAGE
+import com.lemon.smartcampus.viewModel.course.CourseViewAction
+import com.lemon.smartcampus.viewModel.course.CourseViewEvent
+import com.lemon.smartcampus.viewModel.course.CourseViewModel
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun CoursePage(
-    navController: NavController?
+    navController: NavController?,
+    scaffoldState: ScaffoldState?,
+    viewModel: CourseViewModel = viewModel()
 ) {
-    var expand by remember { mutableStateOf(false) }
-    val animateHeight by animateDpAsState(targetValue = if (expand) 100.dp else 50.dp)
-    var week by remember { mutableStateOf(1) }
-    var dInWeek by remember { mutableStateOf("一") }
+    val state by viewModel.viewStates.collectAsState()
+    val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val weekState = rememberFWheelPickerState()
     val dState = rememberFWheelPickerState()
 
+    var expand by remember { mutableStateOf(false) }
+    var isChange by remember { mutableStateOf(false) }
+    var reCompose by remember { mutableStateOf(false) }
+
+    val reComposeAlpha by animateFloatAsState(targetValue = if (reCompose) 0.99f else 1f)
+    val animateHeight by animateDpAsState(targetValue = if (expand) 100.dp else 50.dp)
+    LaunchedEffect(key1 = Unit) {
+        // TODO 开发警告
+        scaffoldState?.let {
+            popupSnackBar(
+                scope,
+                scaffoldState,
+                SNACK_WARN,
+                "!!!注意!!!该功能正在开发或者测试当中"
+            )
+        }
+        viewModel.dispatch(CourseViewAction.GetOneDayCourse)
+        viewModel.viewEvents.observeEvent(lifecycleOwner) { events ->
+            when (events) {
+                is CourseViewEvent.Recompose -> reCompose = true
+            }
+        }
+    }
     LaunchedEffect(key1 = weekState) {
-        snapshotFlow { weekState.currentIndex }.onEach { week = if (it <= 0) 1 else it + 1 }
-            .collect()
+        snapshotFlow { weekState.currentIndex }.collectLatest {
+            viewModel.dispatch(CourseViewAction.UpdateWeek(if (it <= 0) 1 else it + 1))
+            isChange = true
+        }
     }
     LaunchedEffect(key1 = dState) {
-        snapshotFlow { dState.currentIndex }.onEach {
-            dInWeek = indexToChar(if (it < 0) 0 else it)
-        }.collect()
+        snapshotFlow { dState.currentIndex }.collectLatest {
+            viewModel.dispatch(CourseViewAction.UpdateDInWeek(indexToChar(if (it < 0) 0 else it)))
+            isChange = true
+        }
+    }
+    LaunchedEffect(key1 = expand) {
+        if (!expand && isChange) {
+            viewModel.dispatch(CourseViewAction.GetOneDayCourse)
+        }
+    }
+    LaunchedEffect(key1 = reCompose) {
+        if (reCompose) reCompose = false
     }
 
-    Scaffold(floatingActionButton = {
+    Scaffold(modifier = Modifier.alpha(reComposeAlpha), floatingActionButton = {
         FloatingActionButton(
-            onClick = { /*TODO 添加*/ },
+            onClick = { navController?.navigate(COURSE_EDIT_PAGE) { launchSingleTop } },
             modifier = Modifier.padding(bottom = 60.dp),
             shape = CircleShape,
             backgroundColor = AppTheme.colors.card,
@@ -105,7 +152,7 @@ fun CoursePage(
                                 onClick = { expand = !expand }), contentAlignment = Alignment.Center
                     ) {
                         if (!expand) Text(
-                            text = "第${week}周 星期${dInWeek}",
+                            text = "第${state.week}周 星期${state.dInWeek}",
                             fontSize = 16.sp,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -165,7 +212,10 @@ fun CoursePage(
                     .fillMaxWidth()
                     .padding(start = 20.dp, end = 20.dp, top = 10.dp)
             ) {
-
+                items(state.oneDayCourse) {
+                    CourseCard(courseEntity = it)
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
             }
         }
     }
@@ -174,10 +224,10 @@ fun CoursePage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 fun CoursePagePreview() {
-    CoursePage(null)
+    CoursePage(null, null)
 }
 
-private fun indexToChar(num: Int): String {
+fun indexToChar(num: Int): String {
     return when (num) {
         0 -> "一"
         1 -> "二"

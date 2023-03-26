@@ -23,6 +23,7 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.lemon.smartcampus.ui.authPage.AuthPage
+import com.lemon.smartcampus.ui.course.CourseEditPage
 import com.lemon.smartcampus.ui.course.CoursePage
 import com.lemon.smartcampus.ui.coverPage.CoverPage
 import com.lemon.smartcampus.ui.discoverPage.publishPage.PublishPage
@@ -38,23 +39,18 @@ fun AppScaffold() {
     val navController = rememberAnimatedNavController()
     val scaffoldState = rememberScaffoldState()
 
-    Scaffold(
-        modifier = Modifier
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = scaffoldState.snackbarHostState
-            ) { data ->
-                AppSnackBar(data = data)
-            }
+    Scaffold(modifier = Modifier
+        .statusBarsPadding()
+        .navigationBarsPadding(), snackbarHost = {
+        SnackbarHost(
+            hostState = scaffoldState.snackbarHostState
+        ) { data ->
+            AppSnackBar(data = data)
         }
-    ) { padding ->
+    }) { padding ->
         AnimatedNavHost(
             modifier = Modifier
-                .background(
-                    color = AppTheme.colors.background
-                )
+                .background(color = AppTheme.colors.background)
                 .fillMaxSize()
                 .padding(padding),
             navController = navController,
@@ -63,8 +59,7 @@ fun AppScaffold() {
             composable(route = COVER_PAGE) {
                 rememberSystemUiController().setSystemBarsColor(
                     if (!isSystemInDarkTheme()) Color(0xFF007AFF)
-                    else Color(0xFF012E5F),
-                    darkIcons = isSystemInDarkTheme()
+                    else Color(0xFF012E5F), darkIcons = isSystemInDarkTheme()
                 )
                 CoverPage(navController = navController)
             }
@@ -84,75 +79,57 @@ fun AppScaffold() {
                 )
                 AuthPage(navController = navController, scaffoldState = scaffoldState)
             }
-            composable(route = PUBLISH_PAGE,
-                enterTransition = {
-                    expandIn(
-                        expandFrom = Alignment.TopCenter,
-                        animationSpec = tween(400)
-                    ) { IntSize.Zero } + fadeIn()
-                },
-                popEnterTransition = {
-                    expandIn(
-                        expandFrom = Alignment.TopCenter,
-                        animationSpec = tween(400)
-                    ) { IntSize.Zero } + fadeIn()
-                },
-                popExitTransition = {
-                    shrinkOut(
-                        shrinkTowards = Alignment.TopCenter,
-                        animationSpec = tween(400)
-                    ) { IntSize.Zero } + fadeOut()
-                },
-                exitTransition = {
-                    shrinkOut(
-                        shrinkTowards = Alignment.TopCenter,
-                        animationSpec = tween(400)
-                    ) { IntSize.Zero } + fadeOut()
-                }
-            ) {
+            composable(route = PUBLISH_PAGE, enterTransition = {
+                expandIn(
+                    expandFrom = Alignment.TopCenter, animationSpec = tween(400)
+                ) { IntSize.Zero } + fadeIn()
+            }, popEnterTransition = {
+                expandIn(
+                    expandFrom = Alignment.TopCenter, animationSpec = tween(400)
+                ) { IntSize.Zero } + fadeIn()
+            }, popExitTransition = {
+                shrinkOut(
+                    shrinkTowards = Alignment.TopCenter, animationSpec = tween(400)
+                ) { IntSize.Zero } + fadeOut()
+            }, exitTransition = {
+                shrinkOut(
+                    shrinkTowards = Alignment.TopCenter, animationSpec = tween(400)
+                ) { IntSize.Zero } + fadeOut()
+            }) {
                 rememberSystemUiController().setSystemBarsColor(
                     AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
                 PublishPage(navController = navController, scaffoldState = scaffoldState)
             }
-            composable(
-                route = "$DETAILS_PAGE/{id}",
+            composable(route = "$DETAILS_PAGE/{id}",
                 arguments = listOf(navArgument("id") { type = NavType.StringType }),
                 enterTransition = {
                     expandIn(
-                        expandFrom = Alignment.TopCenter,
-                        animationSpec = tween(200)
+                        expandFrom = Alignment.TopCenter, animationSpec = tween(200)
                     ) { IntSize.Zero } + fadeIn()
                 },
                 popEnterTransition = {
                     expandIn(
-                        expandFrom = Alignment.TopCenter,
-                        animationSpec = tween(200)
+                        expandFrom = Alignment.TopCenter, animationSpec = tween(200)
                     ) { IntSize.Zero } + fadeIn()
                 },
                 popExitTransition = {
                     shrinkOut(
-                        shrinkTowards = Alignment.TopCenter,
-                        animationSpec = tween(200)
+                        shrinkTowards = Alignment.TopCenter, animationSpec = tween(200)
                     ) { IntSize.Zero } + fadeOut()
                 },
                 exitTransition = {
                     shrinkOut(
-                        shrinkTowards = Alignment.TopCenter,
-                        animationSpec = tween(200)
+                        shrinkTowards = Alignment.TopCenter, animationSpec = tween(200)
                     ) { IntSize.Zero } + fadeOut()
-                }
-            ) {
+                }) {
                 rememberSystemUiController().setNavigationBarColor(
-                    AppTheme.colors.background,
-                    darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
                 val argument = it.arguments
                 val id = argument?.getString("id") ?: ""
                 TopicDetailPage(
-                    navController = navController,
-                    scaffoldState = scaffoldState,
-                    id = id
+                    navController = navController, scaffoldState = scaffoldState, id = id
                 )
             }
             composable(route = COURSE_PAGE) {
@@ -160,10 +137,16 @@ fun AppScaffold() {
                     if (!isSystemInDarkTheme()) Color(0xFFFFF3D8) else Color(0xFF575249),
                     darkIcons = isSystemInDarkTheme()
                 )
-                CoursePage(navController = navController)
+                CoursePage(navController = navController, scaffoldState)
                 rememberSystemUiController().setNavigationBarColor(
                     AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
+            }
+            composable(route = COURSE_EDIT_PAGE,
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
+            ) {
+                CourseEditPage(navController = navController, scaffoldState = scaffoldState)
             }
         }
     }

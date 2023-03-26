@@ -3,6 +3,7 @@ package com.lemon.smartcampus.ui.discoverPage.tabPage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -24,7 +25,6 @@ import com.lemon.smartcampus.ui.widges.popupSnackBar
 import com.lemon.smartcampus.utils.DETAILS_PAGE
 import com.lemon.smartcampus.viewModel.topic.TopicViewModel
 import com.orhanobut.logger.Logger
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -39,30 +39,38 @@ fun TopicPage(
     val pageData = viewModel.getPage(true).collectAsLazyPagingItems()
     var refreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullRefreshState(refreshing, { pageData.refresh() })
+    val lazyState = rememberLazyListState()
 
-//    LaunchedEffect(key1 = Unit) {
-//        snapshotFlow { pageData.loadState }
-//            .onEach {
-//                Logger.d("loading: $it")
-//                when (it.refresh) {
-//                    is LoadState.Loading -> refreshing = true
-//                    is LoadState.Error -> scaffoldState?.let {
-//                        val error = (pageData.loadState.refresh as LoadState.Error).error.message
-//                        popupSnackBar(scope, scaffoldState, SNACK_ERROR, error ?: "未知异常")
-//                        delay(100)
-//                        refreshing = false
-//                        pageData.retry()
-//                    }
-//                    else -> refreshing = false
-//                }
-//            }.collect()
-//        snapshotFlow { pageData.loadState.append is LoadState.Error }
-//            .collectLatest {
-//                if (it) scaffoldState?.let {
-//                    popupSnackBar(scope, scaffoldState, SNACK_ERROR, "网络好像被UFO捉走了QAQ")
-//                }
-//            }
-//    }
+    LaunchedEffect(key1 = Unit) {
+        snapshotFlow { pageData.loadState }.collectLatest { states ->
+            Logger.d("state: $states")
+            when (states.refresh) {
+                is LoadState.Loading -> {}
+                is LoadState.Error -> {
+                    val error = (states.refresh as LoadState.Error).error
+                    scaffoldState?.let {
+                        popupSnackBar(
+                            scope, scaffoldState, SNACK_ERROR,
+                            error.message ?: "未知错误,请联系管理员"
+                        )
+                    }
+                }
+                is LoadState.NotLoading -> {}
+            }
+            when (states.append) {
+                is LoadState.Error -> {
+                    val error = (states.refresh as LoadState.Error).error
+                    scaffoldState?.let {
+                        popupSnackBar(
+                            scope, scaffoldState, SNACK_ERROR,
+                            error.message ?: "未知错误,请联系管理员"
+                        )
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -71,7 +79,8 @@ fun TopicPage(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            state = lazyState
         ) {
             if (pageData.itemCount == 0)
                 items(5) {

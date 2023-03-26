@@ -17,11 +17,10 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import com.lemon.smartcampus.data.globalData.AppContext
-import com.lemon.smartcampus.ui.widges.ResCard
-import com.lemon.smartcampus.ui.widges.ResType
-import com.lemon.smartcampus.ui.widges.TopicCard
+import com.lemon.smartcampus.ui.widges.*
 import com.lemon.smartcampus.utils.DETAILS_PAGE
 import com.lemon.smartcampus.viewModel.topic.TopicViewModel
+import com.orhanobut.logger.Logger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
@@ -34,8 +33,40 @@ fun ResPage(
     needToTop: Boolean = false,
     onScrollTop: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     val pageData = viewModel.getPage(false).collectAsLazyPagingItems()
     val isRefresh by remember{ mutableStateOf(false)}
+
+    LaunchedEffect(key1 = Unit) {
+        snapshotFlow { pageData.loadState }.collectLatest { states ->
+            Logger.d("state: $states")
+            when (states.refresh) {
+                is LoadState.Loading -> {}
+                is LoadState.Error -> {
+                    val error = (states.refresh as LoadState.Error).error
+                    scaffoldState?.let {
+                        popupSnackBar(
+                            scope, scaffoldState, SNACK_ERROR,
+                            error.message ?: "未知错误,请联系管理员"
+                        )
+                    }
+                }
+                is LoadState.NotLoading -> {}
+            }
+            when (states.append) {
+                is LoadState.Error -> {
+                    val error = (states.refresh as LoadState.Error).error
+                    scaffoldState?.let {
+                        popupSnackBar(
+                            scope, scaffoldState, SNACK_ERROR,
+                            error.message ?: "未知错误,请联系管理员"
+                        )
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
 
     val pullRefreshState = rememberPullRefreshState(isRefresh, { pageData.refresh() })
     Box(

@@ -67,7 +67,7 @@ fun ProfilePage(
     val context = LocalContext.current
 
     val state by viewModel.viewStates.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var isLoading by remember { mutableStateOf(false) }
@@ -79,7 +79,7 @@ fun ProfilePage(
             when (it) {
                 is ProfileViewEvent.ShowToast -> scaffoldState?.let { scaffold ->
                     popupSnackBar(
-                        coroutineScope, scaffold, SNACK_ERROR, it.msg
+                        scope, scaffold, SNACK_ERROR, it.msg
                     )
                 }
                 is ProfileViewEvent.Recompose -> recompose = true
@@ -117,8 +117,8 @@ fun ProfilePage(
                         viewModel.dispatch(ProfileViewAction.ChangeAvatar(path))
                     else
                         viewModel.dispatch(ProfileViewAction.ChangeBackground(path))
-                } ?: scaffoldState?.let { popupSnackBar(coroutineScope, it, SNACK_ERROR, "获取文件失败") }
-            } ?: scaffoldState?.let { popupSnackBar(coroutineScope, it, SNACK_ERROR, "获取文件失败") }
+                } ?: scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, "获取文件失败") }
+            } ?: scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, "获取文件失败") }
         }
 
     var photoUri by remember { mutableStateOf(Uri.EMPTY) }
@@ -150,7 +150,7 @@ fun ProfilePage(
 
     val showBottomDialog = remember { mutableStateOf(false) }
     val showGetPermission = remember { mutableStateOf(false) }
-    var showEditPage = remember { mutableStateOf(false) }
+    val showEditPage = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -248,6 +248,15 @@ fun ProfilePage(
                         else Color(0xFF6D7F86)
                     ) {
                         // TODO 我的备忘
+                        // TODO 开发警告
+                        scaffoldState?.let {
+                            popupSnackBar(
+                                scope,
+                                scaffoldState,
+                                SNACK_WARN,
+                                "!!!注意!!!该功能正在开发或者测试当中"
+                            )
+                        }
                     }
                 }
                 // 我的发布
@@ -288,6 +297,15 @@ fun ProfilePage(
                                     },
                                     onDownload = {
                                         // TODO 下载资源
+                                        // TODO 开发警告
+                                        scaffoldState?.let {
+                                            popupSnackBar(
+                                                scope,
+                                                scaffoldState,
+                                                SNACK_WARN,
+                                                "!!!注意!!!该功能正在开发或者测试当中"
+                                            )
+                                        }
                                     })
                                 Spacer(modifier = Modifier.width(10.dp))
                             }
@@ -415,6 +433,15 @@ fun ProfilePage(
         MoreActionCard(
             listOf(ActionPair("清除缓存") {
                 // TODO 清除缓存
+                // TODO 开发警告
+                scaffoldState?.let {
+                    popupSnackBar(
+                        scope,
+                        scaffoldState,
+                        SNACK_WARN,
+                        "!!!注意!!!该功能正在开发或者测试当中"
+                    )
+                }
             }, ActionPair("退出登录", true) {
                 viewModel.dispatch(ProfileViewAction.Logout)
                 showSetting = false

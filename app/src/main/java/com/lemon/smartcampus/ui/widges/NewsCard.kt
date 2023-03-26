@@ -2,16 +2,16 @@ package com.lemon.smartcampus.ui.widges
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +39,10 @@ fun NewsCard(
         Box(modifier = Modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(10.dp))
-            .clickable { onClick.invoke() })
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = rememberRipple()
+            ) { onClick.invoke() })
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,8 +114,8 @@ fun NewsCardList(data: List<NewsEntity>, onClick: (Int) -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
-        } else for (x in 0..3) item {
-            NewsCard(unload = true) {}
+        } else items(4) {
+            NewsCard(unload = true) { onClick.invoke(it) }
             Spacer(modifier = Modifier.height(10.dp))
         }
     }

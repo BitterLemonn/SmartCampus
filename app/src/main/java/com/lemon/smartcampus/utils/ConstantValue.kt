@@ -10,6 +10,7 @@ const val AUTH_PAGE = "AUTH_PAGE"
 const val PUBLISH_PAGE = "PUBLISH_PAGE"
 const val DETAILS_PAGE = "DETAILS_PAGE"
 const val COURSE_PAGE = "COURSE_PAGE"
+const val COURSE_EDIT_PAGE = "COURSE_EDIT_PAGE"
 
 // 每页数据量
 const val COUNT_PER_PAGE = 8

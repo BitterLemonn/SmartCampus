@@ -134,7 +134,7 @@ fun TopicCard(
                 )
                 Spacer(modifier = Modifier.height(7.dp))
                 if (hasRes)
-                    Box(modifier = Modifier.padding(bottom = 15.dp)){
+                    Box(modifier = Modifier.padding(bottom = 15.dp)) {
                         resCard.invoke()
                     }
                 // 工具栏
@@ -298,9 +298,9 @@ fun ResCard(
     resType: Int = ResType.UNKNOWN,
     resSize: Float = 0f,
     resLink: String = "",
-    isDownloading: Boolean = false,
     isCard: Boolean = false,
-    onDownload: (String) -> Unit
+    onDownload: (String) -> Unit,
+    isDownloading: Boolean = false
 ) {
     if (!isCard)
         Box(
@@ -357,7 +357,9 @@ fun ResContent(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(0.5f).padding(start = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .padding(start = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -390,11 +392,12 @@ fun ResContent(
                 maxLines = 1
             )
             Spacer(modifier = Modifier.width(15.dp))
-            Image(
-                painter = painterResource(id = R.drawable.download2),
-                contentDescription = "download",
-                modifier = Modifier.size(25.dp)
-            )
+            if (!isDownloading)
+                Image(
+                    painter = painterResource(id = R.drawable.download2),
+                    contentDescription = "download",
+                    modifier = Modifier.size(25.dp)
+                )
         }
     }
 }

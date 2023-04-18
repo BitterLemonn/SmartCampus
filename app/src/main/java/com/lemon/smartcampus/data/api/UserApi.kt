@@ -5,6 +5,7 @@ import com.lemon.smartcampus.data.common.CommonInterceptor
 import com.lemon.smartcampus.data.common.UserUrl
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.database.networkEntities.*
+import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -90,7 +91,7 @@ interface UserApi {
             return Retrofit.Builder()
                 .baseUrl(UserUrl)
                 .addConverterFactory(
-                    Json.asConverterFactory(contentType = "application/json".toMediaType())
+                    JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )
                 .client(client)
                 .build()

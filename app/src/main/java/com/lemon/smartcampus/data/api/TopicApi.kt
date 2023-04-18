@@ -8,6 +8,7 @@ import com.lemon.smartcampus.data.database.networkEntities.CommentResponseEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicCommentEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicPublishEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicResponseEntity
+import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -86,7 +87,7 @@ interface TopicApi {
             return Retrofit.Builder()
                 .baseUrl(TopicUrl)
                 .addConverterFactory(
-                    Json.asConverterFactory(contentType = "application/json".toMediaType())
+                    JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )
                 .client(client)
                 .build()

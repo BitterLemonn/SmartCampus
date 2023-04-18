@@ -29,9 +29,7 @@ import kotlinx.coroutines.flow.*
 fun ResPage(
     navController: NavController?,
     scaffoldState: ScaffoldState? = null,
-    viewModel: TopicViewModel = viewModel(),
-    needToTop: Boolean = false,
-    onScrollTop: () -> Unit
+    viewModel: TopicViewModel = viewModel()
 ) {
     val scope = rememberCoroutineScope()
     val pageData = viewModel.getPage(false).collectAsLazyPagingItems()

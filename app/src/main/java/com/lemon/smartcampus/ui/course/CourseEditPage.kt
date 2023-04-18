@@ -1,5 +1,7 @@
 package com.lemon.smartcampus.ui.course
 
+import android.content.Intent
+import android.provider.AlarmClock
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +17,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -26,47 +29,38 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.smartcampus.R
+import com.lemon.smartcampus.data.database.database.GlobalDataBase
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.theme.SchoolBlueDay
 import com.lemon.smartcampus.ui.theme.SchoolBlueNight
 import com.lemon.smartcampus.ui.widges.*
+import com.lemon.smartcampus.utils.COURSE_GLOBAL_PAGE
+import com.lemon.smartcampus.utils.SMART_CAMPUS_CN
+import com.lemon.smartcampus.utils.indexToChar
 import com.lemon.smartcampus.viewModel.course.CourseEditViewAction
 import com.lemon.smartcampus.viewModel.course.CourseEditViewEvent
 import com.lemon.smartcampus.viewModel.course.CourseEditViewModel
 import com.sd.lib.compose.wheel_picker.FVerticalWheelPicker
 import com.sd.lib.compose.wheel_picker.rememberFWheelPickerState
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun CourseEditPage(
     navController: NavController?,
     scaffoldState: ScaffoldState?,
+    courseID: String? = null,
     viewModel: CourseEditViewModel = viewModel()
 ) {
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
     val state by viewModel.viewStates.collectAsState()
-    LaunchedEffect(key1 = Unit) {
-        // TODO 开发警告
-        scaffoldState?.let {
-            popupSnackBar(scope, scaffoldState, SNACK_WARN,
-                "!!!注意!!!该功能正在开发或者测试当中")
-        }
-        viewModel.viewEvents.observeEvent(lifecycleOwner) { events ->
-            when (events) {
-                is CourseEditViewEvent.ShowToast ->
-                    scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, events.msg) }
-                is CourseEditViewEvent.TransIntent -> navController?.popBackStack()
-            }
-        }
-    }
 
-    var expandDInWeek by remember { mutableStateOf(false) }
-    val expandWeek = remember { mutableStateOf(false) }
-    val expandTime = remember { mutableStateOf(false) }
-    var expandAlarm by remember { mutableStateOf(false) }
-    var isShort by remember { mutableStateOf(false) }
+    var lessonCount by remember { mutableStateOf(0) }
 
     var startH by remember { mutableStateOf(7) }
     var startMF by remember { mutableStateOf(0) }
@@ -74,6 +68,60 @@ fun CourseEditPage(
     var endH by remember { mutableStateOf(7) }
     var endMF by remember { mutableStateOf(0) }
     var endME by remember { mutableStateOf(0) }
+
+    LaunchedEffect(key1 = Unit) {
+        // TODO 开发警告
+        scaffoldState?.let {
+            popupSnackBar(
+                scope, scaffoldState, SNACK_WARN,
+                "!!!注意!!!该功能正在开发或者测试当中"
+            )
+        }
+        // 读取编辑ID
+        if (!courseID.isNullOrBlank()){
+            scope.launch(Dispatchers.IO) {
+                val entity = GlobalDataBase.database.courseDao().get(courseID)
+                if (entity != null)
+                    viewModel.dispatch(CourseEditViewAction.Init(entity))
+            }
+        }
+
+        viewModel.viewEvents.observeEvent(lifecycleOwner) { events ->
+            when (events) {
+                is CourseEditViewEvent.ShowToast ->
+                    scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, events.msg) }
+                is CourseEditViewEvent.TransIntent -> navController?.popBackStack()
+                is CourseEditViewEvent.SetAlarm -> {
+                    val clock = Intent(AlarmClock.ACTION_SET_ALARM)
+                    clock.putExtra(AlarmClock.EXTRA_HOUR, events.timeH)
+                        .putExtra(AlarmClock.EXTRA_MINUTES, events.timeM)
+                        .putExtra(AlarmClock.EXTRA_DAYS, arrayListOf(events.dayInWeek))
+                        .putExtra(
+                            AlarmClock.EXTRA_MESSAGE,
+                            "${SMART_CAMPUS_CN}${state.courseName}${state.location}"
+                        )
+                        .putExtra(AlarmClock.EXTRA_SKIP_UI, true)
+                        .putExtra(AlarmClock.EXTRA_VIBRATE, false)
+                    context.startActivity(clock)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = AppContext.courseGlobal) {
+        val setting = AppContext.courseGlobal
+        lessonCount = setting.morningClass + setting.noonClass + setting.nightClass
+        lessonCount = if (lessonCount > 0) lessonCount else 0
+    }
+
+    var expandDInWeek by remember { mutableStateOf(false) }
+    val expandWeek = remember { mutableStateOf(false) }
+    val expandTime = remember { mutableStateOf(false) }
+    var expandAlarm by remember { mutableStateOf(false) }
+    var expandClass by remember { mutableStateOf(false) }
+    var isShort by remember { mutableStateOf(false) }
+
+    var classIndex by remember { mutableStateOf(1) }
 
     val weekSState = rememberFWheelPickerState(initialIndex = 0)
     val weekEState = rememberFWheelPickerState(initialIndex = 0)
@@ -133,6 +181,7 @@ fun CourseEditPage(
     val animatedDInWeekRotate by animateFloatAsState(targetValue = if (expandDInWeek) 90f else 270f)
     val animatedWeekRotate by animateFloatAsState(targetValue = if (expandWeek.value) 90f else 270f)
     val animatedAlarmRotate by animateFloatAsState(targetValue = if (expandAlarm) 90f else 270f)
+    val animatedClassRotate by animateFloatAsState(targetValue = if (expandClass) 90f else 270f)
 
     BoxWithConstraints(Modifier.fillMaxSize()) { isShort = maxHeight < 800.dp }
     Column(Modifier.fillMaxSize()) {
@@ -154,7 +203,14 @@ fun CourseEditPage(
                 BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(10.dp)),
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                navController?.navigate(COURSE_GLOBAL_PAGE) { launchSingleTop }
+                            }
+                        ),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Image(
@@ -401,6 +457,110 @@ fun CourseEditPage(
                         }
                     }
                     if (!isShort) {
+                        // TODO 节数
+                        if (AppContext.courseGlobal.morningClass < -999)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                BoxWithConstraints(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(AppTheme.colors.background)
+                                        .clickable(interactionSource = remember {
+                                            MutableInteractionSource()
+                                        },
+                                            indication = rememberRipple(),
+                                            onClick = { expandClass = true })
+                                        .border(
+                                            width = 1.dp,
+                                            color = AppTheme.colors.hintLightColor,
+                                            shape = RoundedCornerShape(10.dp)
+                                        )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(start = 15.dp)
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.calendar3),
+                                            contentDescription = "class num",
+                                            modifier = Modifier.size(25.dp),
+                                            colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                                                Color.Gray
+                                            )
+                                            else null
+                                        )
+                                        Spacer(modifier = Modifier.width(25.dp))
+                                        Text(
+                                            text = "节数",
+                                            fontSize = 16.sp,
+                                            color = AppTheme.colors.textDarkColor
+                                        )
+                                    }
+                                    Text(
+                                        text = "第${classIndex}节",
+                                        fontSize = 16.sp,
+                                        textAlign = TextAlign.Center,
+                                        color = AppTheme.colors.textDarkColor,
+                                        modifier = Modifier.padding(start = maxWidth / 4)
+                                    )
+                                    DropdownMenu(
+                                        expanded = expandClass,
+                                        onDismissRequest = { expandClass = false },
+                                        offset = DpOffset(maxWidth - 120.dp, 0.dp),
+                                        modifier = Modifier
+                                            .background(AppTheme.colors.card)
+                                            .clip(RoundedCornerShape(10.dp))
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .height(120.dp)
+                                                .verticalScroll(rememberScrollState())
+                                        ) {
+                                            for (it in 1..lessonCount) {
+                                                DropdownMenuItem(
+                                                    onClick = {
+                                                        // TODO
+//                                                    chooseLesson()
+                                                    },
+                                                    modifier = Modifier.background(AppTheme.colors.card)
+                                                ) {
+                                                    Text(
+                                                        text = "第${it}节",
+                                                        fontSize = 14.sp,
+                                                        color = AppTheme.colors.textDarkColor
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(end = 20.dp),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.back),
+                                            contentDescription = "",
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .rotate(animatedClassRotate),
+                                            colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                                                Color.Gray
+                                            )
+                                            else null
+                                        )
+                                    }
+                                }
+                            }
                         // 时间
                         BoxWithConstraints(
                             contentAlignment = Alignment.Center,
@@ -429,7 +589,9 @@ fun CourseEditPage(
                                     painter = painterResource(id = R.drawable.clock),
                                     contentDescription = "time",
                                     modifier = Modifier.size(25.dp),
-                                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(Color.Gray)
+                                    colorFilter = if (isSystemInDarkTheme()) ColorFilter.tint(
+                                        Color.Gray
+                                    )
                                     else null
                                 )
                                 Spacer(modifier = Modifier.width(25.dp))
@@ -604,7 +766,9 @@ fun CourseEditPage(
                             .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
                             .clickable(indication = rememberRipple(),
                                 interactionSource = MutableInteractionSource(),
-                                onClick = { viewModel.dispatch(CourseEditViewAction.SaveCourse()) }),
+                                onClick = {
+                                    viewModel.dispatch(CourseEditViewAction.SaveCourse())
+                                }),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

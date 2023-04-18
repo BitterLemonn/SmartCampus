@@ -15,6 +15,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,12 +46,15 @@ fun TopicDetailPage(
     var isTouchOutSide by remember { mutableStateOf(false) }
     var isShow by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
+    val showGrainWrite = remember { mutableStateOf(false) }
+    val showGrainNotification = remember { mutableStateOf(false) }
 
     val host = AppContext.topicDetail[id] ?: TopicEntity()
     val state by viewModel.viewStates.collectAsState()
     val lazyState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val pullState = rememberPullRefreshState(
         refreshing = loading,
@@ -78,13 +82,8 @@ fun TopicDetailPage(
         }
     }
 
-    LaunchedEffect(key1 = state.commentList) {
-        Logger.d("change")
-    }
-
     LaunchedEffect(key1 = lazyState) {
         snapshotFlow { lazyState.firstVisibleItemIndex }.onEach {
-            Logger.d("nowSeen:$it")
             if (state.commentList.size - it < 10) {
                 if (state.commentList.isEmpty()) viewModel.dispatch(DetailViewAction.Refresh)
                 else viewModel.dispatch(DetailViewAction.GetNextPage)
@@ -118,7 +117,11 @@ fun TopicDetailPage(
                     .padding(vertical = 10.dp, horizontal = 20.dp),
                 state = lazyState
             ) {
-                item { CommentHostCard(topic = host) }
+                item {
+                    CommentHostCard(topic = host, downloading = state.isDownloading) {
+                        showGrainWrite.value = true
+                    }
+                }
                 items(state.commentList) {
                     CommentSubCard(comment = it)
                 }
@@ -154,6 +157,30 @@ fun TopicDetailPage(
 
     if (loading)
         WarpLoadingDialog()
+
+    GrantPermission(
+        isShow = showGrainWrite,
+        permission = PermissionType.WRITE,
+        textDenied = "智慧校园需要文件写入权限来下载文件",
+        textBlock = "智慧校园需要文件写入权限来下载文件，拒绝后将无法进行资源下载"
+    ) {
+        showGrainNotification.value = true
+    }
+    GrantPermission(
+        isShow = showGrainNotification,
+        permission = PermissionType.NOTIFICATION,
+        textDenied = "智慧校园需要童通知权限来进行下载进度的通知",
+        textBlock ="智慧校园需要童通知权限来进行下载进度的通知，拒绝后将无法知晓下载进度"
+    ) {
+        viewModel.dispatch(
+            DetailViewAction.Download(
+                url = host.resourceLink,
+                context = context,
+                fileName = "${host.resourceName}.${host.resourceLink.split(".").last()}",
+                fileSize = host.resourceSize
+            )
+        )
+    }
 }
 
 @Composable

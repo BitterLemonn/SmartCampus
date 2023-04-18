@@ -11,15 +11,18 @@ interface CourseDao {
     @Query("SELECT * FROM courseEntity")
     fun getAll(): List<CourseEntity>?
 
-    @Query("SELECT * FROM courseEntity WHERE dayInWeek = :dInWeek AND (:week BETWEEN startWeek AND endWeek)")
+    @Query("SELECT * FROM courseEntity WHERE id = :id")
+    fun get(id: String): CourseEntity?
+
+    @Query("SELECT * FROM courseEntity WHERE dayInWeek = :dInWeek AND (:week BETWEEN startWeek AND endWeek) ORDER BY id")
     fun getOneDay(dInWeek: String, week: Int): List<CourseEntity>?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(profileEntity: CourseEntity)
 
-    @Query("DELETE FROM profileEntity WHERE id = :id")
+    @Query("DELETE FROM courseEntity WHERE id = :id")
     fun delete(id: String)
 
-    @Query("DELETE FROM profileEntity")
+    @Query("DELETE FROM courseEntity")
     fun deleteAll()
 }

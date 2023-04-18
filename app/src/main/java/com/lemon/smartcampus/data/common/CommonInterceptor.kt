@@ -28,7 +28,7 @@ class CommonInterceptor : Interceptor {
             )
         )
         //拆包 正式运行须注释起来
-//        Logger.e("拆包！！: ${(response.body as ResponseBody).string()}")
+//        Logger.e("拆包！！: header:${response.headers}\nbody:${(response.body as ResponseBody).string()}")
         return response
     }
 }

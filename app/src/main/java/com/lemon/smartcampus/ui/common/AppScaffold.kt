@@ -24,11 +24,15 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.lemon.smartcampus.ui.authPage.AuthPage
 import com.lemon.smartcampus.ui.course.CourseEditPage
+import com.lemon.smartcampus.ui.course.CourseGlobalPage
 import com.lemon.smartcampus.ui.course.CoursePage
 import com.lemon.smartcampus.ui.coverPage.CoverPage
 import com.lemon.smartcampus.ui.discoverPage.publishPage.PublishPage
 import com.lemon.smartcampus.ui.discoverPage.tabPage.TopicDetailPage
 import com.lemon.smartcampus.ui.homePage.HomePage
+import com.lemon.smartcampus.ui.infoPage.InfoDetail
+import com.lemon.smartcampus.ui.infoPage.InfoListPage
+import com.lemon.smartcampus.ui.infoPage.InfoType
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.AppSnackBar
 import com.lemon.smartcampus.utils.*
@@ -52,9 +56,7 @@ fun AppScaffold() {
             modifier = Modifier
                 .background(color = AppTheme.colors.background)
                 .fillMaxSize()
-                .padding(padding),
-            navController = navController,
-            startDestination = COVER_PAGE
+                .padding(padding), navController = navController, startDestination = COVER_PAGE
         ) {
             composable(route = COVER_PAGE) {
                 rememberSystemUiController().setSystemBarsColor(
@@ -142,11 +144,53 @@ fun AppScaffold() {
                     AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
             }
-            composable(route = COURSE_EDIT_PAGE,
+            composable(route = "$COURSE_EDIT_PAGE?courseID={courseID}",
+                arguments = listOf(navArgument("courseID") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }),
                 enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
-                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }) {
+                CourseEditPage(
+                    navController = navController,
+                    scaffoldState = scaffoldState,
+                    courseID = it.arguments?.getString("courseID")
+                )
+            }
+            composable(route = COURSE_GLOBAL_PAGE,
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }) {
+                CourseGlobalPage(navController = navController, scaffoldState = scaffoldState)
+            }
+            composable(
+                route = "$INFO_DETAIL/{infoID}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) },
+                arguments = listOf(navArgument("infoID") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                })
             ) {
-                CourseEditPage(navController = navController, scaffoldState = scaffoldState)
+                InfoDetail(
+                    navController = navController,
+                    scaffoldState = scaffoldState,
+                    infoID = it.arguments?.getString("infoID") ?: ""
+                )
+            }
+            composable(
+                route = "$INFO_LIST/{type}",
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) },
+                arguments = listOf(navArgument("type") {
+                    type = NavType.IntType
+                    defaultValue = InfoType.NEWS
+                })
+            ) {
+                InfoListPage(
+                    navController = navController,
+                    scaffoldState = scaffoldState,
+                    type = it.arguments?.getInt("type") ?: InfoType.NEWS
+                )
             }
         }
     }

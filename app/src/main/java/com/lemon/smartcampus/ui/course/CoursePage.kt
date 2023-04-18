@@ -34,6 +34,7 @@ import com.lemon.smartcampus.ui.widges.CourseCard
 import com.lemon.smartcampus.ui.widges.SNACK_WARN
 import com.lemon.smartcampus.ui.widges.popupSnackBar
 import com.lemon.smartcampus.utils.COURSE_EDIT_PAGE
+import com.lemon.smartcampus.utils.indexToChar
 import com.lemon.smartcampus.viewModel.course.CourseViewAction
 import com.lemon.smartcampus.viewModel.course.CourseViewEvent
 import com.lemon.smartcampus.viewModel.course.CourseViewModel
@@ -52,7 +53,7 @@ fun CoursePage(
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val weekState = rememberFWheelPickerState()
+    val weekState = rememberFWheelPickerState(state.week)
     val dState = rememberFWheelPickerState()
 
     var expand by remember { mutableStateOf(false) }
@@ -213,7 +214,9 @@ fun CoursePage(
                     .padding(start = 20.dp, end = 20.dp, top = 10.dp)
             ) {
                 items(state.oneDayCourse) {
-                    CourseCard(courseEntity = it)
+                    CourseCard(courseEntity = it) {
+                        navController?.navigate("$COURSE_EDIT_PAGE?courseID=${it.id}")
+                    }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             }
@@ -225,17 +228,4 @@ fun CoursePage(
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 fun CoursePagePreview() {
     CoursePage(null, null)
-}
-
-fun indexToChar(num: Int): String {
-    return when (num) {
-        0 -> "一"
-        1 -> "二"
-        2 -> "三"
-        3 -> "四"
-        4 -> "五"
-        5 -> "六"
-        6 -> "日"
-        else -> "日"
-    }
 }

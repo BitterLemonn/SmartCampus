@@ -11,9 +11,17 @@ const val PUBLISH_PAGE = "PUBLISH_PAGE"
 const val DETAILS_PAGE = "DETAILS_PAGE"
 const val COURSE_PAGE = "COURSE_PAGE"
 const val COURSE_EDIT_PAGE = "COURSE_EDIT_PAGE"
+const val COURSE_GLOBAL_PAGE = "COURSE_GLOBAL_PAGE"
+const val INFO_DETAIL = "INFO_DETAIL"
+const val INFO_LIST = "INFO_LIST"
 
 // 每页数据量
 const val COUNT_PER_PAGE = 8
+
+const val SMART_CAMPUS_CN = "智慧校园: "
+const val SMART_CAMPUS= "SMART_CAMPUS"
+const val INFO_REFRESH_TIME = "INFO_REFRESH_TIME"
+const val MY_LIST_REFRESH_TIME = "MY_LIST_REFRESH_TIME"
 
 // JsonConverter
 object JsonConverter {

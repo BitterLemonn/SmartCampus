@@ -2,7 +2,10 @@ package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lemon.smartcampus.data.common.CommonInterceptor
-import com.lemon.smartcampus.data.common.TokenUrl
+import com.lemon.smartcampus.data.common.InfoUrl
+import com.lemon.smartcampus.data.database.entities.AcademicEntity
+import com.lemon.smartcampus.data.database.entities.InfoEntity
+import com.lemon.smartcampus.data.database.entities.NewsEntity
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -10,16 +13,27 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.POST
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-interface TokenApi {
-    @POST("send")
-    @FormUrlEncoded
-    suspend fun requestToken(
-        @Field("phone") phone: String
-    ): ResponseData<String>
+interface InfoApi {
+    @GET("newsList/1/4")
+    suspend fun getHomePageNewsList(): ResponseData<InfoEntity<NewsEntity>>
+
+    @GET("informationList/1/4")
+    suspend fun getHomePageAcademicList(): ResponseData<InfoEntity<AcademicEntity>>
+
+    @GET("newsList/{page}/{count}")
+    suspend fun getNewsList(
+        @Path("page") page: Int,
+        @Path("count") count: Int
+    ): ResponseData<InfoEntity<NewsEntity>>
+
+    @GET("informationList/{page}/{count}")
+    suspend fun getAcademicList(
+        @Path("page") page: Int,
+        @Path("count") count: Int
+    ): ResponseData<InfoEntity<AcademicEntity>>
 
     companion object {
         /**
@@ -27,18 +41,18 @@ interface TokenApi {
          * @return ServerApi
          */
         @OptIn(ExperimentalSerializationApi::class)
-        fun create(): TokenApi {
+        fun create(): InfoApi {
             val client = OkHttpClient.Builder()
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(TokenUrl)
+                .baseUrl(InfoUrl)
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )
                 .client(client)
                 .build()
-                .create(TokenApi::class.java)
+                .create(InfoApi::class.java)
         }
     }
 }

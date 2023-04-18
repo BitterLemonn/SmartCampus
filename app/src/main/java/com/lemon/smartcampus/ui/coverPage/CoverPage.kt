@@ -33,6 +33,14 @@ fun CoverPage(
 ) {
     var second by remember { mutableStateOf(3) }
     LaunchedEffect(Unit) {
+        this.launch(Dispatchers.IO) {
+            val profile = GlobalDataBase.database.profileDao().get()
+            if (profile != null)
+                AppContext.profile = profile
+            val setting = GlobalDataBase.database.courseGlobalDao().get()
+            if (setting != null)
+                AppContext.courseGlobal = setting
+        }
         while (second != 0) {
             delay(1_000)
             second -= 1
@@ -41,13 +49,6 @@ fun CoverPage(
         navController?.navigate(HOME_PAGE) {
             popUpToRoute
             launchSingleTop = true
-        }
-    }
-    LaunchedEffect(key1 = Unit) {
-        this.launch(Dispatchers.IO) {
-            val profile = GlobalDataBase.database.profileDao().getAll()
-            if (profile != null && profile.isNotEmpty())
-                AppContext.profile = profile[0]
         }
     }
     Box(

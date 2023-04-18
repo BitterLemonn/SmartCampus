@@ -2,13 +2,18 @@ package com.lemon.smartcampus.ui.widges
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,7 +24,8 @@ import com.lemon.smartcampus.ui.theme.AppTheme
 
 @Composable
 fun CourseCard(
-    courseEntity: CourseEntity
+    courseEntity: CourseEntity,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -29,56 +35,73 @@ fun CourseCard(
         shape = RoundedCornerShape(10.dp),
         elevation = 10.dp
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp, horizontal = 10.dp)
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = onClick
+                )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(45.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp, horizontal = 10.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.clock),
-                    contentDescription = "time",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = courseEntity.startTime,
-                    fontSize = 14.sp,
-                    color = AppTheme.colors.textDarkColor
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = courseEntity.endTime,
-                    fontSize = 14.sp,
-                    color = AppTheme.colors.textDarkColor
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.8f),
-                verticalArrangement = Arrangement.SpaceAround
-            ) {
-                TextWithIcon(icon = R.drawable.book, text = courseEntity.name)
-                TextWithIcon(icon = R.drawable.location, text = courseEntity.location)
-            }
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
-                Image(
-                    painter = painterResource(
-                        id = if (courseEntity.needAlarm) R.drawable.alarm_selected
-                        else R.drawable.alarm
-                    ),
-                    contentDescription = "alarm"
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(45.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.clock),
+                        contentDescription = "time",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = courseEntity.startTime,
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textDarkColor
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = courseEntity.endTime,
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textDarkColor
+                    )
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.8f)
+                ) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    TextWithIcon(icon = R.drawable.book, text = courseEntity.name)
+                    if (courseEntity.location.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        TextWithIcon(icon = R.drawable.location, text = courseEntity.location)
+                    }
+                }
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    Image(
+                        painter = painterResource(
+                            id = if (courseEntity.needAlarm) R.drawable.alarm_selected
+                            else R.drawable.alarm
+                        ),
+                        contentDescription = "alarm"
+                    )
+                }
             }
         }
     }
+
 }
 
 @Composable

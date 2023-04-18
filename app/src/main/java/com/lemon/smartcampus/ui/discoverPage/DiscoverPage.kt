@@ -35,8 +35,6 @@ object TabPage {
         index: Int,
         navController: NavController?,
         scaffoldState: ScaffoldState? = null,
-        needToTop: Boolean = false,
-        onScrollTop: () -> Unit
     ): @Composable () -> Unit {
         if (pageList.isEmpty()) {
             pageList = listOf(
@@ -44,9 +42,8 @@ object TabPage {
                 {
                     ResPage(
                         navController = navController,
-                        scaffoldState = scaffoldState,
-                        needToTop = index == 1 && needToTop
-                    ) { onScrollTop.invoke() }
+                        scaffoldState = scaffoldState
+                    )
                 }
             )
         }
@@ -101,7 +98,7 @@ fun DiscoverPage(
             state = pageState,
             userScrollEnabled = false
         ) {
-            TabPage.getPage(it, navController, scaffoldState, needToTop) { needToTop = false }
+            TabPage.getPage(it, navController, scaffoldState)
                 .invoke()
         }
     }

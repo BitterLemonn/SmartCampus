@@ -19,8 +19,10 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.lang.ref.Cleaner
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -83,8 +85,10 @@ fun uri2Path(context: Context, uri: Uri): String? {
                     ) {
                         var displayName = "${System.currentTimeMillis()}" +
                                 "${((Math.random() + 1) * 1000).roundToInt()}." +
-                                "${MimeTypeMap.getSingleton()
-                                        .getExtensionFromMimeType(contentResolver.getType(uri))}"
+                                "${
+                                    MimeTypeMap.getSingleton()
+                                        .getExtensionFromMimeType(contentResolver.getType(uri))
+                                }"
                         cursor = contentResolver.query(
                             uri,
                             arrayOf(MediaStore.Files.FileColumns.DISPLAY_NAME),
@@ -161,6 +165,31 @@ fun logoutLocal(scope: CoroutineScope) {
     scope.launch(Dispatchers.IO) {
         AppContext.profile = null
         GlobalDataBase.database.profileDao().deleteAll()
+    }
+}
+
+fun charDay2CalendarDay(day: String): Int {
+    return when (day) {
+        "一" -> Calendar.MONDAY
+        "二" -> Calendar.TUESDAY
+        "三" -> Calendar.WEDNESDAY
+        "四" -> Calendar.THURSDAY
+        "五" -> Calendar.FRIDAY
+        "六" -> Calendar.SATURDAY
+        "日" -> Calendar.SUNDAY
+        else -> Calendar.MONDAY
+    }
+}
+fun indexToChar(num: Int): String {
+    return when (num) {
+        0 -> "一"
+        1 -> "二"
+        2 -> "三"
+        3 -> "四"
+        4 -> "五"
+        5 -> "六"
+        6 -> "日"
+        else -> "日"
     }
 }
 

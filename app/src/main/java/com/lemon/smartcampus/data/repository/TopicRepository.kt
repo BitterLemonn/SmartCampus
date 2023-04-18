@@ -1,5 +1,6 @@
 package com.lemon.smartcampus.data.repository
 
+import com.lemon.smartcampus.data.api.DownloadApi
 import com.lemon.smartcampus.data.api.TopicApi
 import com.lemon.smartcampus.data.database.networkEntities.CommentResponseEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicCommentEntity
@@ -11,6 +12,8 @@ import com.lemon.smartcampus.utils.UnifiedExceptionHandler
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.ResponseBody
 
 class TopicRepository {
     companion object {
@@ -58,5 +61,9 @@ class TopicRepository {
         return UnifiedExceptionHandler.handleSuspendWithToken {
             TopicApi.create().delPost(token = token!!, topicId = topicId)
         }
+    }
+
+    suspend fun download(url: String): ResponseBody{
+        return DownloadApi.create().download(url)
     }
 }

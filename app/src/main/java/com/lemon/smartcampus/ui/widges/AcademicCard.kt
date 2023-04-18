@@ -105,7 +105,7 @@ fun AcademicCardCommon(
                     overflow = TextOverflow.Ellipsis,
                     color = AppTheme.colors.textBlackColor
                 )
-                Text(text = date, fontSize = 14.sp, color = AppTheme.colors.textLightColor)
+                Text(text = date.split(" ").first(), fontSize = 14.sp, color = AppTheme.colors.textLightColor)
             } else {
                 Box(
                     modifier = Modifier
@@ -153,7 +153,7 @@ fun AcademicList(
         }
         if (!onLoad)
             items(academicList) { item ->
-                AcademicCardCommon(title = item.title, date = item.date) {
+                AcademicCardCommon(title = item.informationTitle, date = item.publishDate.split(" ").first()) {
                     onClick.invoke(academicList.indexOf(item))
                 }
                 Divider(

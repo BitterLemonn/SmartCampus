@@ -1,10 +1,14 @@
 package com.lemon.smartcampus.viewModel.topic
 
+import android.content.Context
+import android.os.Environment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.smartcampus.R
 import com.lemon.smartcampus.data.database.entities.CommentEntity
 import com.lemon.smartcampus.data.repository.TopicRepository
 import com.lemon.smartcampus.utils.NetworkState
+import com.lemon.smartcampus.utils.NotificationUtils
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -12,6 +16,7 @@ import com.zj.mvi.core.setState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 class DetailViewModel : ViewModel() {
     private val repository = TopicRepository.getInstance()
@@ -30,6 +35,12 @@ class DetailViewModel : ViewModel() {
             is DetailViewAction.GetNextPage -> getPage(false)
             is DetailViewAction.Refresh -> getPage(true)
             is DetailViewAction.DelPost -> delPost()
+            is DetailViewAction.Download -> download(
+                viewAction.url,
+                viewAction.context,
+                viewAction.fileName,
+                viewAction.fileSize
+            )
         }
     }
 
@@ -71,7 +82,7 @@ class DetailViewModel : ViewModel() {
             }.onStart {
                 if (isRefresh) _viewEvents.setEvent(DetailViewEvent.ShowLoadingDialog)
             }.catch {
-                    DetailViewEvent.ShowToast(it.message!!, false)
+                DetailViewEvent.ShowToast(it.message!!, false)
             }.onCompletion { _viewEvents.setEvent(DetailViewEvent.DismissLoadingDialog) }
                 .flowOn(Dispatchers.IO).collect()
         }
@@ -130,6 +141,40 @@ class DetailViewModel : ViewModel() {
         }
     }
 
+    private fun download(url: String, context: Context, fileName: String, size: Float) {
+        viewModelScope.launch {
+            val dir =
+                File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/smartCampus")
+            if (!dir.isDirectory) dir.mkdir()
+            val dest = File("${dir.absolutePath}/$fileName")
+            flow {
+                val result = repository.download(url)
+                val inputStream = result.byteStream()
+                Logger.d("dest: $dest")
+                dest.outputStream().use { output ->
+                    emit((inputStream.copyTo(output) / 1_000).toInt())
+                }
+            }.catch {
+                _viewEvents.setEvent(DetailViewEvent.ShowToast(it.message ?: "未知异常,请联系管理员", false))
+            }.onEach {
+                val notification =
+                    NotificationUtils(context, R.mipmap.ic_launcher, "智慧校园", "正在下载$fileName")
+                Logger.d("下载进度: $it/${(size * 1_000).toInt()}")
+                notification.changeProgress(now = it, total = (size * 1_000).toInt())
+                _viewStates.setState { copy(isDownloading = it < (size * 1_000).toInt()) }
+                if (it >= (size * 1_000).toInt()) {
+                    _viewEvents.setEvent(
+                        DetailViewEvent.ShowToast(
+                            "文件地址: ${dest.absolutePath}",
+                            success = true
+                        )
+                    )
+                }
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+
 }
 
 data class DetailViewState(
@@ -139,7 +184,8 @@ data class DetailViewState(
     val curPage: Int = 1,
     val loading: Boolean = false,
     val atTop: Boolean = false,
-    val loadAll: Boolean = false
+    val loadAll: Boolean = false,
+    val isDownloading: Boolean = false
 )
 
 sealed class DetailViewAction {
@@ -150,6 +196,13 @@ sealed class DetailViewAction {
     object Refresh : DetailViewAction()
     object SendChat : DetailViewAction()
     object DelPost : DetailViewAction()
+    data class Download(
+        val url: String,
+        val context: Context,
+        val fileName: String,
+        val fileSize: Float
+    ) :
+        DetailViewAction()
 }
 
 sealed class DetailViewEvent {

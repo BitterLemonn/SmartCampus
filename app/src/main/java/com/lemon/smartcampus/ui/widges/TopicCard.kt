@@ -9,6 +9,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,25 +81,23 @@ fun TopicCard(
                         .fillMaxWidth()
                         .height(40.dp)
                 ) {
-                    if (iconUrl.isNotBlank())
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current).data(iconUrl)
-                                .crossfade(true).build(),
-                            contentDescription = "$nickName icon",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(5.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    else
-                        Image(
-                            painter = painterResource(id = R.drawable.cat_logo),
-                            contentDescription = "$nickName icon",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(5.dp)),
-                            contentScale = ContentScale.Crop
-                        )
+                    if (iconUrl.isNotBlank()) AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(iconUrl)
+                            .crossfade(true).build(),
+                        contentDescription = "$nickName icon",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(5.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    else Image(
+                        painter = painterResource(id = R.drawable.cat_logo),
+                        contentDescription = "$nickName icon",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(5.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(
                         modifier = Modifier
@@ -114,9 +113,7 @@ fun TopicCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = date,
-                            color = AppTheme.colors.textDarkColor,
-                            fontSize = 10.sp
+                            text = date, color = AppTheme.colors.textDarkColor, fontSize = 10.sp
                         )
                     }
                 }
@@ -133,10 +130,9 @@ fun TopicCard(
                         .height(65.dp)
                 )
                 Spacer(modifier = Modifier.height(7.dp))
-                if (hasRes)
-                    Box(modifier = Modifier.padding(bottom = 15.dp)) {
-                        resCard.invoke()
-                    }
+                if (hasRes) Box(modifier = Modifier.padding(bottom = 15.dp)) {
+                    resCard.invoke()
+                }
                 // 工具栏
                 Row(
                     modifier = Modifier.fillMaxSize(),
@@ -203,8 +199,7 @@ fun TopicCardPlaceHolder() {
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
         ) {
             Box(
                 modifier = Modifier
@@ -299,49 +294,45 @@ fun ResCard(
     resSize: Float = 0f,
     resLink: String = "",
     isCard: Boolean = false,
+    isDownloaded: Boolean = false,
     onDownload: (String) -> Unit,
     isDownloading: Boolean = false
 ) {
-    if (!isCard)
-        Box(
-            modifier = Modifier
-                .border(
-                    width = 2.dp,
-                    color = AppTheme.colors.textLightColor,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .clip(RoundedCornerShape(10.dp))
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = MutableInteractionSource()
-                ) { onDownload.invoke(resLink) }
-                .padding(horizontal = 13.dp)
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            ResContent(resName, resType, resSize, isDownloading)
-        }
-    else
-        Card(
-            modifier = Modifier
-                .padding(start = 13.dp, end = 13.dp, bottom = 10.dp)
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(10.dp),
-            elevation = 10.dp,
-            backgroundColor = AppTheme.colors.card
-        ) {
-            Box(modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = MutableInteractionSource()
-                ) {
-                    onDownload.invoke(resLink)
-                }) {
-                ResContent(resName, resType, resSize, isDownloading)
-            }
-        }
+    if (!isCard) Box(modifier = Modifier
+        .border(
+            width = 2.dp,
+            color = AppTheme.colors.textLightColor,
+            shape = RoundedCornerShape(10.dp)
+        )
+        .clip(RoundedCornerShape(10.dp))
+        .clickable(
+            enabled = !isDownloading && !isDownloaded,
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { onDownload.invoke(resLink) }
+        .padding(horizontal = 13.dp)
+        .fillMaxWidth()
+        .height(50.dp)) {
+        ResContent(resName, resType, resSize, isDownloaded, isDownloading)
+    }
+    else Card(
+        modifier = Modifier
+            .padding(start = 13.dp, end = 13.dp, bottom = 10.dp)
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(10.dp),
+        elevation = 10.dp,
+        backgroundColor = AppTheme.colors.card
+    ) {
+        Box(modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                enabled = !isDownloading && !isDownloaded,
+                indication = rememberRipple(),
+                interactionSource = MutableInteractionSource()
+            ) { onDownload.invoke(resLink) })
+        { ResContent(resName, resType, resSize, isDownloaded, isDownloading) }
+    }
 }
 
 @Composable
@@ -349,6 +340,7 @@ fun ResContent(
     resName: String = "",
     resType: Int = ResType.UNKNOWN,
     resSize: Float = 0f,
+    isDownloaded: Boolean = false,
     isDownloading: Boolean = false
 ) {
     Row(
@@ -392,12 +384,16 @@ fun ResContent(
                 maxLines = 1
             )
             Spacer(modifier = Modifier.width(15.dp))
-            if (!isDownloading)
-                Image(
-                    painter = painterResource(id = R.drawable.download2),
-                    contentDescription = "download",
-                    modifier = Modifier.size(25.dp)
-                )
+            if (isDownloaded) Image(
+                painter = painterResource(id = R.drawable.right),
+                contentDescription = "downloaded",
+                modifier = Modifier.size(25.dp)
+            )
+            else if (!isDownloading) Image(
+                painter = painterResource(id = R.drawable.download2),
+                contentDescription = "download",
+                modifier = Modifier.size(25.dp)
+            )
         }
     }
 }

@@ -14,9 +14,10 @@ import com.lemon.smartcampus.data.database.entities.*
         CourseEntity::class,
         CourseGlobalSettingEntity::class,
         NewsEntity::class,
-        AcademicEntity::class
+        AcademicEntity::class,
+        NoteEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDataBase : RoomDatabase() {
@@ -45,5 +46,7 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun courseGlobalDao(): CourseGlobalDao
 
     abstract fun infoDao(): InfoDao
+
+    abstract fun noteDao(): NoteDao
 
 }

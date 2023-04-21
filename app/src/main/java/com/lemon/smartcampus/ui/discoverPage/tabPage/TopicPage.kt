@@ -1,11 +1,14 @@
 package com.lemon.smartcampus.ui.discoverPage.tabPage
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -13,16 +16,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import com.lemon.smartcampus.data.globalData.AppContext
-import com.lemon.smartcampus.ui.widges.SNACK_ERROR
+import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.TopicCard
-import com.lemon.smartcampus.ui.widges.popupSnackBar
-import com.lemon.smartcampus.utils.DETAILS_PAGE
 import com.lemon.smartcampus.viewModel.topic.TopicViewModel
 import com.orhanobut.logger.Logger
 import kotlinx.coroutines.flow.*
@@ -30,46 +32,35 @@ import kotlinx.coroutines.flow.*
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TopicPage(
-    navController: NavController?,
-    scaffoldState: ScaffoldState? = null,
-    viewModel: TopicViewModel = viewModel()
+    showToast: (String, String) -> Unit = {_,_ ->},
+    viewModel: TopicViewModel = viewModel(),
+    scrollToTop: MutableState<Boolean> = mutableStateOf(false),
+    navToPostDetail: (String) -> Unit,
+    onChangeToTop: (Boolean) -> Unit,
 ) {
-
-    val scope = rememberCoroutineScope()
     val pageData = viewModel.getPage(true).collectAsLazyPagingItems()
     var refreshing by remember { mutableStateOf(false) }
-    val pullRefreshState = rememberPullRefreshState(refreshing, { pageData.refresh() })
+
+    val pullRefreshState = rememberPullRefreshState(false, { pageData.refresh() }, 60.dp)
     val lazyState = rememberLazyListState()
 
-    LaunchedEffect(key1 = Unit) {
-        snapshotFlow { pageData.loadState }.collectLatest { states ->
-            Logger.d("state: $states")
-            when (states.refresh) {
-                is LoadState.Loading -> {}
-                is LoadState.Error -> {
-                    val error = (states.refresh as LoadState.Error).error
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_ERROR,
-                            error.message ?: "未知错误,请联系管理员"
-                        )
-                    }
-                }
-                is LoadState.NotLoading -> {}
-            }
-            when (states.append) {
-                is LoadState.Error -> {
-                    val error = (states.refresh as LoadState.Error).error
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_ERROR,
-                            error.message ?: "未知错误,请联系管理员"
-                        )
-                    }
-                }
-                else -> {}
-            }
+    LaunchedEffect(key1 = scrollToTop.value) {
+        if (scrollToTop.value) {
+            lazyState.animateScrollToItem(0)
+            scrollToTop.value = false
         }
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        snapshotFlow { pageData.loadState }.onEach { states ->
+            refreshing = states.append is LoadState.Loading || states.refresh is LoadState.Loading
+        }.collect()
+    }
+
+    LaunchedEffect(key1 = lazyState) {
+        snapshotFlow { lazyState.firstVisibleItemIndex }.onEach {
+            onChangeToTop.invoke(it > 0)
+        }.collect()
     }
 
     Box(
@@ -82,7 +73,7 @@ fun TopicPage(
             horizontalAlignment = Alignment.CenterHorizontally,
             state = lazyState
         ) {
-            if (pageData.itemCount == 0)
+            if (pageData.itemCount == 0 && refreshing)
                 items(5) {
                     TopicCard(
                         isLoading = true,
@@ -104,17 +95,24 @@ fun TopicPage(
                         commentCount = it.commentCount
                     ) { // onClick
                         AppContext.topicDetail += mapOf(Pair(it.topicId, it))
-                        navController?.navigate("$DETAILS_PAGE/${it.topicId}")
+                        navToPostDetail.invoke(it.topicId)
                     }
                 }
             }
+            if (refreshing){
+                 item {
+                     Spacer(modifier = Modifier.height(10.dp))
+                     Text(text = "正在加载...", fontSize = 16.sp, color = AppTheme.colors.textLightColor)
+                     Spacer(modifier = Modifier.height(20.dp))
+                 }
+            }
         }
-        PullRefreshIndicator(refreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
+        PullRefreshIndicator(refreshing = false, state = pullRefreshState)
     }
 }
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun TopicPagePreview() {
-    TopicPage(navController = null)
+    TopicPage(navToPostDetail = {}, onChangeToTop = {})
 }

@@ -28,14 +28,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
-import com.lemon.smartcampus.utils.AUTH_PAGE
 import com.lemon.smartcampus.utils.uri2Path
 import com.lemon.smartcampus.viewModel.topic.publish.PublishViewAction
 import com.lemon.smartcampus.viewModel.topic.publish.PublishViewEvent
@@ -53,7 +51,6 @@ private object PageList {
     private var pageList: List<@Composable () -> Unit> = listOf()
     fun getPage(
         index: Int,
-        navController: NavController?,
         scaffoldState: ScaffoldState?,
         viewModel: PublishViewModel
     ): @Composable () -> Unit {
@@ -68,9 +65,10 @@ private object PageList {
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun PublishPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
-    viewModel: PublishViewModel = viewModel()
+    viewModel: PublishViewModel = viewModel(),
+    onBack: () -> Unit,
+    navToAuth: () -> Unit
 ) {
     var topicMode by remember { mutableStateOf(true) }
     var nowSelect by remember { mutableStateOf(0) }
@@ -104,13 +102,10 @@ fun PublishPage(
                         )
                     }
                 }
-                is PublishViewEvent.TransIntent -> navController?.popBackStack()
+                is PublishViewEvent.TransIntent -> onBack.invoke()
                 is PublishViewEvent.ShowLoadingDialog -> loading = true
                 is PublishViewEvent.DismissLoadingDialog -> loading = false
-                is PublishViewEvent.Logout -> navController?.navigate(AUTH_PAGE) {
-                    popUpToRoute
-                    launchSingleTop
-                }
+                is PublishViewEvent.Logout -> navToAuth.invoke()
             }
         }
     }
@@ -180,7 +175,7 @@ fun PublishPage(
                     .size(30.dp)
                     .padding(5.dp)
             )
-        }, onBack = { navController?.popBackStack() })
+        }, onBack = onBack)
         TabTitle(
             tabList = tabList, onClick = { nowSelect = it }, nowSelect = nowSelect
         )
@@ -260,7 +255,7 @@ fun PublishPage(
                     .padding(padding),
                 state = pageState
             ) {
-                PageList.getPage(it, navController, scaffoldState, viewModel).invoke()
+                PageList.getPage(it, scaffoldState, viewModel).invoke()
             }
         }
     }
@@ -279,5 +274,5 @@ fun PublishPage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun PublishPagePreview() {
-    PublishPage(navController = null, scaffoldState = null)
+    PublishPage(scaffoldState = null, onBack = {}, navToAuth = {})
 }

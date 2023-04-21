@@ -1,4 +1,4 @@
-package com.lemon.smartcampus.ui.course
+package com.lemon.smartcampus.ui.coursePage
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,14 +26,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.ColoredTitleBar
 import com.lemon.smartcampus.ui.widges.CourseCard
 import com.lemon.smartcampus.ui.widges.SNACK_WARN
 import com.lemon.smartcampus.ui.widges.popupSnackBar
-import com.lemon.smartcampus.utils.COURSE_EDIT_PAGE
 import com.lemon.smartcampus.utils.indexToChar
 import com.lemon.smartcampus.viewModel.course.CourseViewAction
 import com.lemon.smartcampus.viewModel.course.CourseViewEvent
@@ -45,9 +43,10 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun CoursePage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
-    viewModel: CourseViewModel = viewModel()
+    viewModel: CourseViewModel = viewModel(),
+    onBack: () -> Unit,
+    navToCourseEdit: (String) -> Unit
 ) {
     val state by viewModel.viewStates.collectAsState()
     val scope = rememberCoroutineScope()
@@ -102,7 +101,7 @@ fun CoursePage(
 
     Scaffold(modifier = Modifier.alpha(reComposeAlpha), floatingActionButton = {
         FloatingActionButton(
-            onClick = { navController?.navigate(COURSE_EDIT_PAGE) { launchSingleTop } },
+            onClick = { navToCourseEdit.invoke("") },
             modifier = Modifier.padding(bottom = 60.dp),
             shape = CircleShape,
             backgroundColor = AppTheme.colors.card,
@@ -133,8 +132,9 @@ fun CoursePage(
         ) {
             ColoredTitleBar(
                 color = if (!isSystemInDarkTheme()) Color(0xFFFFF3D8) else Color(0xFF635D53),
-                text = "我的课程"
-            ) { navController?.popBackStack() }
+                text = "我的课程",
+                onBack = onBack
+            )
             Box(modifier = Modifier.fillMaxWidth()) {
                 Card(
                     modifier = Modifier
@@ -215,7 +215,7 @@ fun CoursePage(
             ) {
                 items(state.oneDayCourse) {
                     CourseCard(courseEntity = it) {
-                        navController?.navigate("$COURSE_EDIT_PAGE?courseID=${it.id}")
+                        navToCourseEdit.invoke(it.id)
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
@@ -227,5 +227,5 @@ fun CoursePage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 fun CoursePagePreview() {
-    CoursePage(null, null)
+    CoursePage(null, onBack = {}, navToCourseEdit = {})
 }

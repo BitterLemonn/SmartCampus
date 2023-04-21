@@ -9,6 +9,8 @@ import com.lemon.smartcampus.data.repository.ProfileRepository
 import com.lemon.smartcampus.data.repository.TopicRepository
 import com.lemon.smartcampus.utils.MY_LIST_REFRESH_TIME
 import com.lemon.smartcampus.utils.NetworkState
+import com.lemon.smartcampus.utils.UnifiedExceptionHandler
+import com.lemon.smartcampus.utils.UnifiedExceptionHandler.LoginException
 import com.lemon.smartcampus.utils.logoutLocal
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
@@ -21,7 +23,6 @@ import retrofit2.HttpException
 import java.io.File
 import java.net.ConnectException
 import java.net.SocketTimeoutException
-import javax.security.auth.login.LoginException
 
 class ProfileViewModel : ViewModel() {
     private val repository = ProfileRepository.getInstance()
@@ -52,7 +53,7 @@ class ProfileViewModel : ViewModel() {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
                 if (it is LoginException) {
-                    logoutLocal(viewModelScope)
+                    logoutLocal()
                     _viewEvents.setEvent(ProfileViewEvent.Logout)
                 }
                 // 非网络问题弹出提示
@@ -92,7 +93,7 @@ class ProfileViewModel : ViewModel() {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
                 if (it is LoginException) {
-                    logoutLocal(viewModelScope)
+                    logoutLocal()
                     _viewEvents.setEvent(ProfileViewEvent.Logout)
                 }
                 _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
@@ -151,7 +152,7 @@ class ProfileViewModel : ViewModel() {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
                 if (it is LoginException) {
-                    logoutLocal(viewModelScope)
+                    logoutLocal()
                     _viewEvents.setEvent(ProfileViewEvent.Logout)
                 }
                 _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
@@ -185,7 +186,7 @@ class ProfileViewModel : ViewModel() {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
                 if (it is LoginException) {
-                    logoutLocal(viewModelScope)
+                    logoutLocal()
                     _viewEvents.setEvent(ProfileViewEvent.Logout)
                 }
                 _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
@@ -225,6 +226,11 @@ class ProfileViewModel : ViewModel() {
                     GlobalDataBase.database.profileDao().deleteAll()
                     GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
                 }.catch {
+                    Logger.d("logOut!!: $it")
+                    if (it is LoginException) {
+                        logoutLocal()
+                        _viewEvents.setEvent(ProfileViewEvent.Logout)
+                    }
                     _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
                 }.flowOn(Dispatchers.IO).collect()
             }
@@ -276,6 +282,10 @@ class ProfileViewModel : ViewModel() {
             }.onEach {
                 _viewEvents.setEvent(ProfileViewEvent.Recompose)
             }.catch {
+                if (it is LoginException) {
+                    logoutLocal()
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
                 _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
             }.onCompletion {
                 _viewEvents.setEvent(ProfileViewEvent.DismissLoadingDialog)

@@ -17,11 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
 import com.lemon.smartcampus.utils.COUNT_PER_PAGE
-import com.lemon.smartcampus.utils.INFO_DETAIL
 import com.lemon.smartcampus.viewModel.info.InfoListViewAction
 import com.lemon.smartcampus.viewModel.info.InfoListViewEvent
 import com.lemon.smartcampus.viewModel.info.InfoListViewModel
@@ -37,10 +36,11 @@ object InfoType {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InfoListPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
     type: Int,
-    viewModel: InfoListViewModel = viewModel()
+    viewModel: InfoListViewModel = viewModel(),
+    onBack: () -> Unit,
+    navToInfoDetail: (String) -> Unit,
 ) {
     val pullState = rememberPullRefreshState(
         refreshing = false,
@@ -82,8 +82,9 @@ fun InfoListPage(
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         ColoredTitleBar(
             color = Color.Transparent,
-            text = if (type == InfoType.NEWS) "新闻列表" else "学术列表"
-        ) { navController?.popBackStack() }
+            text = if (type == InfoType.NEWS) "新闻列表" else "学术列表",
+            onBack = onBack
+        )
     }, backgroundColor = AppTheme.colors.background) {
         Box(
             modifier = Modifier
@@ -101,8 +102,8 @@ fun InfoListPage(
                         NewsCard(
                             imageUrl = entity.informationCover,
                             date = entity.publishDate,
-                            title = entity.informationTitle
-                        ) { navController?.navigate("$INFO_DETAIL/${entity.id}") }
+                            title = entity.informationTitle,
+                        ) { navToInfoDetail.invoke(entity.id) }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                 else
@@ -110,7 +111,9 @@ fun InfoListPage(
                         AcademicCardCommon(
                             title = entity.informationTitle,
                             date = entity.publishDate
-                        ) { navController?.navigate("$INFO_DETAIL/${entity.id}") }
+                        ) {
+                            navToInfoDetail.invoke(entity.id)
+                        }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
             }

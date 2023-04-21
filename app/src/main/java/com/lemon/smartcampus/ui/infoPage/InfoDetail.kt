@@ -43,13 +43,13 @@ fun InfoDetail(
                 title = academic?.informationTitle ?: ""
                 time = academic?.publishDate?.split(" ")?.first() ?: ""
                 (academic?.informationContent ?: "").replace("\t", "　　")
-
             } else {
                 title = news.informationTitle
                 time = news.publishDate.split(" ").first()
                 news.informationContent.replace("\t", "　　")
             }
             textList.addAll(text.split("\n"))
+            Logger.d("news: $news")
         }
     }
     Column(modifier = Modifier.fillMaxSize()) {

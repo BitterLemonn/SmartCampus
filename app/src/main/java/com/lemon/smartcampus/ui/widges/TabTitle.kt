@@ -30,7 +30,7 @@ fun TabTitle(
             selectedTabIndex = nowSelect,
             modifier = Modifier
                 .padding(start = 20.dp)
-                .fillMaxWidth(0.4f),
+                .fillMaxWidth(0.5f),
             backgroundColor = Color.Transparent,
             indicator = {
                 TabRowDefaults.Indicator(
@@ -53,8 +53,8 @@ fun TabTitle(
                         Text(
                             color = AppTheme.colors.textBlackColor,
                             text = title,
-                            fontSize = 16.sp,
-                            modifier = Modifier.defaultMinSize(minWidth = 40.dp)
+                            fontSize = (18 - title.length).sp,
+                            modifier = Modifier.widthIn(min = (title.length * 20).dp)
                         )
                     },
                     modifier = Modifier.clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))

@@ -20,4 +20,5 @@ object AppContext {
             weekendClass = false
         )
     var topicDetail: Map<String, TopicEntity> = mapOf()
+    var downloadedFile: Map<String, String> = mapOf()
 }

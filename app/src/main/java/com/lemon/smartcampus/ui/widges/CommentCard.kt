@@ -32,6 +32,7 @@ import com.lemon.smartcampus.ui.theme.AppTheme
 @Composable
 fun CommentHostCard(
     topic: TopicEntity,
+    isDownloaded: Boolean = false,
     downloading: Boolean = false,
     onDownload: (String) -> Unit = {}
 ) {
@@ -105,6 +106,7 @@ fun CommentHostCard(
                     resType = topic.resourceType,
                     resSize = topic.resourceSize,
                     resLink = topic.resourceLink,
+                    isDownloaded = isDownloaded,
                     isDownloading = downloading,
                     isCard = true,
                     onDownload = onDownload

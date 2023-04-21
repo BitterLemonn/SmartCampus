@@ -1,4 +1,4 @@
-package com.lemon.smartcampus.ui.course
+package com.lemon.smartcampus.ui.coursePage
 
 import android.content.Intent
 import android.provider.AlarmClock
@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.data.database.database.GlobalDataBase
 import com.lemon.smartcampus.data.globalData.AppContext
@@ -35,7 +34,6 @@ import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.theme.SchoolBlueDay
 import com.lemon.smartcampus.ui.theme.SchoolBlueNight
 import com.lemon.smartcampus.ui.widges.*
-import com.lemon.smartcampus.utils.COURSE_GLOBAL_PAGE
 import com.lemon.smartcampus.utils.SMART_CAMPUS_CN
 import com.lemon.smartcampus.utils.indexToChar
 import com.lemon.smartcampus.viewModel.course.CourseEditViewAction
@@ -50,10 +48,11 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CourseEditPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
     courseID: String? = null,
-    viewModel: CourseEditViewModel = viewModel()
+    viewModel: CourseEditViewModel = viewModel(),
+    onBack: () -> Unit,
+    navToCourseGlobal: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -78,7 +77,7 @@ fun CourseEditPage(
             )
         }
         // 读取编辑ID
-        if (!courseID.isNullOrBlank()){
+        if (!courseID.isNullOrBlank()) {
             scope.launch(Dispatchers.IO) {
                 val entity = GlobalDataBase.database.courseDao().get(courseID)
                 if (entity != null)
@@ -90,7 +89,7 @@ fun CourseEditPage(
             when (events) {
                 is CourseEditViewEvent.ShowToast ->
                     scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, events.msg) }
-                is CourseEditViewEvent.TransIntent -> navController?.popBackStack()
+                is CourseEditViewEvent.TransIntent -> onBack.invoke()
                 is CourseEditViewEvent.SetAlarm -> {
                     val clock = Intent(AlarmClock.ACTION_SET_ALARM)
                     clock.putExtra(AlarmClock.EXTRA_HOUR, events.timeH)
@@ -187,8 +186,9 @@ fun CourseEditPage(
     Column(Modifier.fillMaxSize()) {
         ColoredTitleBar(
             color = if (!isSystemInDarkTheme()) Color(0xFFFFF3D8) else Color(0xFF635D53),
-            text = "我的课程"
-        ) { navController?.popBackStack() }
+            text = "我的课程",
+            onBack = onBack
+        )
         // 全局设置按钮
         if (!isShort)
             Card(
@@ -207,9 +207,7 @@ fun CourseEditPage(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
-                            onClick = {
-                                navController?.navigate(COURSE_GLOBAL_PAGE) { launchSingleTop }
-                            }
+                            onClick = navToCourseGlobal
                         ),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -887,5 +885,5 @@ fun CourseEditPage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun CourseEditPagePreview() {
-    CourseEditPage(null, null)
+    CourseEditPage(null, null, onBack = {}, navToCourseGlobal = {})
 }

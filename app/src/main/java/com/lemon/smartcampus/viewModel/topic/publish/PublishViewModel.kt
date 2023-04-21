@@ -47,7 +47,7 @@ class PublishViewModel : ViewModel() {
                 _viewEvents.setEvent(PublishViewEvent.TransIntent)
             }.catch {
                 if (it is LoginException) {
-                    logoutLocal(viewModelScope)
+                    logoutLocal()
                     _viewEvents.setEvent(PublishViewEvent.Logout)
                 }
                 _viewEvents.setEvent(PublishViewEvent.ShowToast(it.message!!, false))

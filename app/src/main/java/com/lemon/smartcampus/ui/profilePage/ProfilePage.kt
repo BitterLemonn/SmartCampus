@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
@@ -38,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lemon.smartcampus.BuildConfig
@@ -47,7 +45,8 @@ import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.*
-import com.lemon.smartcampus.utils.*
+import com.lemon.smartcampus.utils.saveBitmapToFile
+import com.lemon.smartcampus.utils.uri2Path
 import com.lemon.smartcampus.viewModel.profile.ProfileViewAction
 import com.lemon.smartcampus.viewModel.profile.ProfileViewEvent
 import com.lemon.smartcampus.viewModel.profile.ProfileViewModel
@@ -59,9 +58,14 @@ import java.io.File
 
 @Composable
 fun ProfilePage(
-    navController: NavController?,
-    scaffoldState: ScaffoldState?,
-    viewModel: ProfileViewModel = viewModel()
+    showToast: (String, String) -> Unit,
+    viewModel: ProfileViewModel = viewModel(),
+    navToAuth: () -> Unit,
+    navToCourse: () -> Unit,
+    navToNote: () -> Unit,
+    navToPublish: () -> Unit,
+    navToPostDetail: (String) -> Unit,
+    forceToAuth: () -> Unit
 ) {
     val profile: ProfileEntity by rememberUpdatedState(newValue = AppContext.profile!!)
     val context = LocalContext.current
@@ -77,20 +81,12 @@ fun ProfilePage(
         viewModel.dispatch(ProfileViewAction.GetUserPost)
         viewModel.viewEvents.observeEvent(lifecycleOwner) {
             when (it) {
-                is ProfileViewEvent.ShowToast -> scaffoldState?.let { scaffold ->
-                    popupSnackBar(
-                        scope, scaffold, SNACK_ERROR, it.msg
-                    )
-                }
+                is ProfileViewEvent.ShowToast -> showToast.invoke(it.msg, SNACK_ERROR)
                 is ProfileViewEvent.Recompose -> recompose = true
                 is ProfileViewEvent.ShowLoadingDialog -> isLoading = true
                 is ProfileViewEvent.DismissLoadingDialog -> isLoading = false
-                is ProfileViewEvent.Logout -> navController?.navigate(AUTH_PAGE) {
-                    popUpToRoute
-                    launchSingleTop
-                }
+                is ProfileViewEvent.Logout -> forceToAuth()
             }
-
         }
     }
 
@@ -117,8 +113,8 @@ fun ProfilePage(
                         viewModel.dispatch(ProfileViewAction.ChangeAvatar(path))
                     else
                         viewModel.dispatch(ProfileViewAction.ChangeBackground(path))
-                } ?: scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, "获取文件失败") }
-            } ?: scaffoldState?.let { popupSnackBar(scope, it, SNACK_ERROR, "获取文件失败") }
+                } ?: showToast("获取文件失败", SNACK_ERROR)
+            } ?: showToast("获取文件失败", SNACK_ERROR)
         }
 
     var photoUri by remember { mutableStateOf(Uri.EMPTY) }
@@ -172,9 +168,7 @@ fun ProfilePage(
                     interactionSource = MutableInteractionSource(),
                     indication = rememberRipple()
                 ) {
-                    if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
-                        launchSingleTop = true
-                    }
+                    if (profile.id.isBlank()) navToAuth.invoke()
                     else {
                         avatarMode = false
                         showBottomDialog.value = true
@@ -212,15 +206,12 @@ fun ProfilePage(
                     nickname = profile.nickname,
                     tags = profile.tags,
                     onEdit = {
-                        if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
-                            launchSingleTop = true
-                        }
+                        if (profile.id.isBlank()) navToAuth.invoke()
                         else showEditPage.value = true
                     },
                     onChangeArthur = {
-                        if (profile.id.isBlank()) navController?.navigate(AUTH_PAGE) {
-                            launchSingleTop = true
-                        } else {
+                        if (profile.id.isBlank()) navToAuth.invoke()
+                        else {
                             avatarMode = true
                             showBottomDialog.value = true
                         }
@@ -237,27 +228,16 @@ fun ProfilePage(
                         img = R.drawable.calendar2,
                         text = "我的课程",
                         backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFFFF3D8)
-                        else Color(0xFF635D53)
-                    ) {
-                        navController?.navigate(COURSE_PAGE) { launchSingleTop }
-                    }
+                        else Color(0xFF635D53),
+                        onClick = navToCourse
+                    )
                     ProfileBtn(
                         img = R.drawable.memo,
                         text = "我的备忘",
                         backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFD0F2FF)
-                        else Color(0xFF6D7F86)
-                    ) {
-                        // TODO 我的备忘
-                        // TODO 开发警告
-                        scaffoldState?.let {
-                            popupSnackBar(
-                                scope,
-                                scaffoldState,
-                                SNACK_WARN,
-                                "!!!注意!!!该功能正在开发或者测试当中"
-                            )
-                        }
-                    }
+                        else Color(0xFF6D7F86),
+                        onClick = navToNote
+                    )
                 }
                 // 我的发布
                 if (state.resList.isNotEmpty()) {
@@ -293,19 +273,12 @@ fun ProfilePage(
                                     resLink = res.resourceLink,
                                     onClick = {
                                         AppContext.topicDetail += mapOf(Pair(res.topicId, res))
-                                        navController?.navigate("$DETAILS_PAGE/${res.topicId}")
+                                        navToPostDetail.invoke(res.topicId)
                                     },
                                     onDownload = {
                                         // TODO 下载资源
                                         // TODO 开发警告
-                                        scaffoldState?.let {
-                                            popupSnackBar(
-                                                scope,
-                                                scaffoldState,
-                                                SNACK_WARN,
-                                                "!!!注意!!!该功能正在开发或者测试当中"
-                                            )
-                                        }
+                                        showToast.invoke("!!!注意!!!该功能正在开发或者测试当中", SNACK_WARN)
                                     })
                                 Spacer(modifier = Modifier.width(10.dp))
                             }
@@ -346,7 +319,7 @@ fun ProfilePage(
                                     commentCount = it.commentCount,
                                     onDel = { viewModel.dispatch(ProfileViewAction.DelPost(it.topicId)) }) {
                                     AppContext.topicDetail += mapOf(Pair(it.topicId, it))
-                                    navController?.navigate("$DETAILS_PAGE/${it.topicId}")
+                                    navToPostDetail.invoke(it.topicId)
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -376,12 +349,8 @@ fun ProfilePage(
                                     .clickable(indication = rememberRipple(),
                                         interactionSource = MutableInteractionSource(),
                                         onClick = {
-                                            if (profile.id.isBlank()) navController?.navigate(
-                                                AUTH_PAGE
-                                            ) { launchSingleTop = true }
-                                            else navController?.navigate(PUBLISH_PAGE) {
-                                                launchSingleTop = true
-                                            }
+                                            if (profile.id.isBlank()) navToAuth.invoke()
+                                            else navToPublish.invoke()
                                         })
                                     .background(AppTheme.colors.schoolBlue)
                                     .padding(vertical = 10.dp, horizontal = 20.dp)
@@ -434,14 +403,7 @@ fun ProfilePage(
             listOf(ActionPair("清除缓存") {
                 // TODO 清除缓存
                 // TODO 开发警告
-                scaffoldState?.let {
-                    popupSnackBar(
-                        scope,
-                        scaffoldState,
-                        SNACK_WARN,
-                        "!!!注意!!!该功能正在开发或者测试当中"
-                    )
-                }
+                showToast.invoke("!!!注意!!!该功能正在开发或者测试当中", SNACK_WARN)
             }, ActionPair("退出登录", true) {
                 viewModel.dispatch(ProfileViewAction.Logout)
                 showSetting = false
@@ -519,5 +481,12 @@ fun ProfilePage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun ProfilePagePreview() {
-    ProfilePage(null, null)
+    ProfilePage(
+        showToast = {_,_->},
+        navToAuth = {},
+        navToCourse = {},
+        navToPublish = {},
+        navToPostDetail = {},
+        navToNote = {},
+        forceToAuth = {})
 }

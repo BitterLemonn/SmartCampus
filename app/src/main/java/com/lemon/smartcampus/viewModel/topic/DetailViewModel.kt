@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.data.database.entities.CommentEntity
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.data.repository.TopicRepository
 import com.lemon.smartcampus.utils.NetworkState
 import com.lemon.smartcampus.utils.NotificationUtils
@@ -163,6 +164,11 @@ class DetailViewModel : ViewModel() {
                 notification.changeProgress(now = it, total = (size * 1_000).toInt())
                 _viewStates.setState { copy(isDownloading = it < (size * 1_000).toInt()) }
                 if (it >= (size * 1_000).toInt()) {
+                    // 记录文件位置
+                    val map = AppContext.downloadedFile.toMutableMap()
+                    map[fileName] = dest.absolutePath
+                    AppContext.downloadedFile = map
+
                     _viewEvents.setEvent(
                         DetailViewEvent.ShowToast(
                             "文件地址: ${dest.absolutePath}",
@@ -173,8 +179,6 @@ class DetailViewModel : ViewModel() {
             }.flowOn(Dispatchers.IO).collect()
         }
     }
-
-
 }
 
 data class DetailViewState(
@@ -201,8 +205,7 @@ sealed class DetailViewAction {
         val context: Context,
         val fileName: String,
         val fileSize: Float
-    ) :
-        DetailViewAction()
+    ) : DetailViewAction()
 }
 
 sealed class DetailViewEvent {

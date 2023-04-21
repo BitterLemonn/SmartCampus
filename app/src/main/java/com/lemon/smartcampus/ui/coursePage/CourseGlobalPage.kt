@@ -1,4 +1,4 @@
-package com.lemon.smartcampus.ui.course
+package com.lemon.smartcampus.ui.coursePage
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.theme.AppTheme
 import com.lemon.smartcampus.ui.widges.ColoredTitleBar
@@ -39,9 +38,9 @@ import com.zj.mvi.core.observeEvent
 
 @Composable
 fun CourseGlobalPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
-    viewModel: CourseGlobalViewModel = viewModel()
+    viewModel: CourseGlobalViewModel = viewModel(),
+    onBack: () -> Unit
 ) {
     var shortHeight by remember { mutableStateOf(false) }
     var saveStep by remember { mutableStateOf(false) }
@@ -66,7 +65,7 @@ fun CourseGlobalPage(
                         message = event.msg
                     )
                 }
-                is CourseGlobalViewEvent.TransIntent -> navController?.popBackStack()
+                is CourseGlobalViewEvent.TransIntent -> onBack.invoke()
                 is CourseGlobalViewEvent.CanNext -> nowClassExpand = true
             }
         }
@@ -87,8 +86,9 @@ fun CourseGlobalPage(
     ) {
         if (!shortHeight) ColoredTitleBar(
             color = if (!isSystemInDarkTheme()) Color(0xFFFFF3D8) else Color(0xFF635D53),
-            text = "全局设置"
-        ) { navController?.popBackStack() }
+            text = "全局设置",
+            onBack = onBack
+        )
         if (!saveStep)
             Column(
                 modifier = Modifier
@@ -490,5 +490,5 @@ fun CourseGlobalPage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun CourseGlobalPagePreview() {
-    CourseGlobalPage(navController = null, scaffoldState = null)
+    CourseGlobalPage(scaffoldState = null){}
 }

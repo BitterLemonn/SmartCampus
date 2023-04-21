@@ -8,7 +8,6 @@ import java.net.SocketTimeoutException
 
 object UnifiedExceptionHandler {
     private const val TAG = "UnifiedException"
-
     suspend fun <T> handleSuspend(function: suspend () -> ResponseData<T>): NetworkState<T> {
         return try {
             val result = function.invoke()

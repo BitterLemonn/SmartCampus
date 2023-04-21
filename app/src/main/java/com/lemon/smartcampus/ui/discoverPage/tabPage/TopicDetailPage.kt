@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.ui.theme.AppTheme
@@ -38,10 +37,10 @@ import kotlinx.coroutines.flow.onEach
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TopicDetailPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState? = null,
     viewModel: DetailViewModel = viewModel(),
-    id: String
+    id: String,
+    onBack: () -> Unit
 ) {
     var isTouchOutSide by remember { mutableStateOf(false) }
     var isShow by remember { mutableStateOf(false) }
@@ -55,6 +54,14 @@ fun TopicDetailPage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    var isDownloaded by remember {
+        mutableStateOf(
+            !AppContext.downloadedFile["${host.resourceName}.${
+                host.resourceLink.split(".").last()
+            }"].isNullOrBlank()
+        )
+    }
 
     val pullState = rememberPullRefreshState(
         refreshing = loading,
@@ -76,8 +83,11 @@ fun TopicDetailPage(
                         else
                             popupSnackBar(scope, scaffoldState, SNACK_ERROR, it.msg)
                     }
+                    isDownloaded = !AppContext.downloadedFile["${host.resourceName}.${
+                        host.resourceLink.split(".").last()
+                    }"].isNullOrBlank()
                 }
-                is DetailViewEvent.TransIntent -> navController?.popBackStack()
+                is DetailViewEvent.TransIntent -> onBack.invoke()
             }
         }
     }
@@ -102,7 +112,7 @@ fun TopicDetailPage(
                     isShow = false
                 })
     ) {
-        ToolBarMore(onBack = { navController?.popBackStack() }, onMore = {
+        ToolBarMore(onBack = onBack, onMore = {
             if (AppContext.profile?.id == host.userId) isShow = true
         })
 
@@ -118,7 +128,11 @@ fun TopicDetailPage(
                 state = lazyState
             ) {
                 item {
-                    CommentHostCard(topic = host, downloading = state.isDownloading) {
+                    CommentHostCard(
+                        topic = host,
+                        isDownloaded = isDownloaded,
+                        downloading = state.isDownloading
+                    ) {
                         showGrainWrite.value = true
                     }
                 }
@@ -169,8 +183,8 @@ fun TopicDetailPage(
     GrantPermission(
         isShow = showGrainNotification,
         permission = PermissionType.NOTIFICATION,
-        textDenied = "智慧校园需要童通知权限来进行下载进度的通知",
-        textBlock ="智慧校园需要童通知权限来进行下载进度的通知，拒绝后将无法知晓下载进度"
+        textDenied = "智慧校园需要通知权限来进行下载进度的通知",
+        textBlock = "智慧校园需要通知权限来进行下载进度的通知，拒绝后将无法知晓下载进度"
     ) {
         viewModel.dispatch(
             DetailViewAction.Download(
@@ -186,5 +200,5 @@ fun TopicDetailPage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun ResDetailPagePreview() {
-    TopicDetailPage(navController = null, id = "")
+    TopicDetailPage(id = "") {}
 }

@@ -2,6 +2,7 @@ package com.lemon.smartcampus.viewModel.info
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.smartcampus.data.database.database.GlobalDataBase
 import com.lemon.smartcampus.data.database.entities.AcademicEntity
 import com.lemon.smartcampus.data.database.entities.NewsEntity
 import com.lemon.smartcampus.data.repository.InfoRepository
@@ -9,7 +10,6 @@ import com.lemon.smartcampus.ui.infoPage.InfoType
 import com.lemon.smartcampus.utils.COUNT_PER_PAGE
 import com.lemon.smartcampus.utils.NetworkState
 import com.lemon.smartcampus.viewModel.topic.DetailViewEvent
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
@@ -40,10 +40,15 @@ class InfoListViewModel : ViewModel() {
                 emit("获取成功")
             }.onStart {
                 if (isRefresh) _viewEvents.setEvent(InfoListViewEvent.ShowLoadingDialog)
+            }.onEach {
+                // 持久化
+                GlobalDataBase.database.infoDao().insertNewsList(viewStates.value.newsList)
+                GlobalDataBase.database.infoDao().insertAcademicList(viewStates.value.academicList)
             }.catch {
                 DetailViewEvent.ShowToast(it.message!!, false)
-            }.onCompletion { _viewEvents.setEvent(InfoListViewEvent.DismissLoadingDialog) }
-                .flowOn(Dispatchers.IO).collect()
+            }.onCompletion {
+                _viewEvents.setEvent(InfoListViewEvent.DismissLoadingDialog)
+            }.flowOn(Dispatchers.IO).collect()
         }
     }
 
@@ -55,13 +60,11 @@ class InfoListViewModel : ViewModel() {
 
         if (viewStates.value.loading || viewStates.value.loadAll) return
         _viewStates.setState { copy(loading = true) }
-        if (type == InfoType.NEWS) when (val result = repository.getNewsList(
-            loadPage, COUNT_PER_PAGE * 2
-        )) {
+        if (type == InfoType.NEWS) when (val result =
+            repository.getNewsList(loadPage, COUNT_PER_PAGE * 2)) {
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
             is NetworkState.Success -> {
                 val data = result.data!!
-                Logger.d("data: ${data.list.map { it.id }}")
                 val list = (if (isRefresh) listOf() else viewStates.value.newsList) + data.list
                 _viewStates.setState {
                     copy(
@@ -71,7 +74,7 @@ class InfoListViewModel : ViewModel() {
                         newsList = list
                     )
                 }
-            }  
+            }
         } else when (val result = repository.getAcademicList(
             loadPage, COUNT_PER_PAGE * 4
         )) {

@@ -49,9 +49,9 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AuthPage(
-    navController: NavController?,
     scaffoldState: ScaffoldState?,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = viewModel(),
+    onBack: () -> Unit
 ) {
     val viewStates = viewModel.viewStates
     val state by viewStates.collectAsState()
@@ -86,7 +86,7 @@ fun AuthPage(
     LaunchedEffect(key1 = Unit) {
         viewModel.viewEvents.observeEvent(lifecycleOwner) {
             when (it) {
-                is AuthViewEvent.TransIntent -> navController?.popBackStack()
+                is AuthViewEvent.TransIntent -> onBack.invoke()
                 is AuthViewEvent.ShowToast -> {
                     scaffoldState?.let { scaffoldState ->
                         popupSnackBar(coroutineScope, scaffoldState, SNACK_ERROR, it.msg)
@@ -154,7 +154,7 @@ fun AuthPage(
                     .clickable(
                         indication = rememberRipple(),
                         interactionSource = MutableInteractionSource(),
-                        onClick = { navController?.popBackStack() }
+                        onClick = { onBack.invoke() }
                     )
                     .padding(5.dp)
                     .size(20.dp))
@@ -620,5 +620,5 @@ fun AuthPage(
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun AuthPagePreview() {
-    AuthPage(null, null)
+    AuthPage(null){}
 }

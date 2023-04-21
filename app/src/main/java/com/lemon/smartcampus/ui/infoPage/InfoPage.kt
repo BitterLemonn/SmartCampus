@@ -1,21 +1,20 @@
 package com.lemon.smartcampus.ui.infoPage
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.lemon.smartcampus.R
 import com.lemon.smartcampus.ui.widges.*
-import com.lemon.smartcampus.utils.INFO_DETAIL
-import com.lemon.smartcampus.utils.INFO_LIST
 import com.lemon.smartcampus.viewModel.info.InfoViewAction
 import com.lemon.smartcampus.viewModel.info.InfoViewEvent
 import com.lemon.smartcampus.viewModel.info.InfoViewModel
@@ -23,11 +22,15 @@ import com.zj.mvi.core.observeEvent
 
 @Composable
 fun InfoPage(
-    navController: NavController?,
-    scaffoldState: ScaffoldState?,
-    viewModel: InfoViewModel = viewModel()
+    showToast: (String, String) -> Unit = { _, _ -> },
+    viewModel: InfoViewModel = viewModel(),
+    navToList: (Int) -> Unit = {},
+    navToInfoDetail: (String) -> Unit = {},
+    navToCharacter: () -> Unit = {},
+    navToIntro: () -> Unit = {},
+    navToCalendarPage: () -> Unit = {}
 ) {
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val state by viewModel.viewStates.collectAsState()
     var searchKey by remember { mutableStateOf("") }
@@ -38,9 +41,7 @@ fun InfoPage(
 
         viewModel.viewEvents.observeEvent(lifecycleOwner) { events ->
             when (events) {
-                is InfoViewEvent.ShowToast -> scaffoldState?.let {
-                    popupSnackBar(scope, scaffoldState, SNACK_ERROR, events.msg)
-                }
+                is InfoViewEvent.ShowToast -> showToast(events.msg, SNACK_ERROR)
             }
         }
     }
@@ -50,16 +51,6 @@ fun InfoPage(
             .fillMaxSize()
             .padding(top = 10.dp)
     ) {
-        SearchBar(
-            key = searchKey,
-            onKeyChange = {
-                // TODO 主页搜索
-            },
-            onSearch = {
-                // TODO 主页搜索
-            },
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp)
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,59 +63,25 @@ fun InfoPage(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HomePageIBtn(icon = R.drawable.building, text = "学校概况") {
-                    // TODO 开发警告
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_WARN,
-                            "!!!注意!!!该功能正在开发或者测试当中"
-                        )
-                    }
-                }
-                HomePageIBtn(icon = R.drawable.medal, text = "广外人物") {
-                    // TODO 开发警告
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_WARN,
-                            "!!!注意!!!该功能正在开发或者测试当中"
-                        )
-                    }
-                }
-                HomePageIBtn(icon = R.drawable.calendar, text = "最新校历") {
-                    // TODO 开发警告
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_WARN,
-                            "!!!注意!!!该功能正在开发或者测试当中"
-                        )
-                    }
-                }
+                HomePageIBtn(icon = R.drawable.building, text = "学校概况") { navToIntro() }
+                HomePageIBtn(icon = R.drawable.medal, text = "广外人物") { navToCharacter() }
+                HomePageIBtn(icon = R.drawable.calendar, text = "最新校历") { navToCalendarPage() }
                 HomePageIBtn(icon = R.drawable.offical, text = "学校官网") {
-                    // TODO 开发警告
-                    scaffoldState?.let {
-                        popupSnackBar(
-                            scope, scaffoldState, SNACK_WARN,
-                            "!!!注意!!!该功能正在开发或者测试当中"
-                        )
-                    }
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gdufs.edu.cn/"))
+                    context.startActivity(intent)
                 }
             }
             Spacer(modifier = Modifier.height(18.dp))
             HomePageTitle(title = "广外新闻", titleEn = "News") {
-                navController?.navigate("$INFO_LIST/${InfoType.NEWS}"){
-                    launchSingleTop
-                }
+                navToList.invoke(InfoType.NEWS)
             }
             NewsCardList(data = state.newsList) {
-                navController?.navigate("$INFO_DETAIL/${state.newsList[it].id}"){
-                    launchSingleTop
-                }
+                if (state.newsList.isNotEmpty())
+                    navToInfoDetail.invoke(state.newsList[it].id)
             }
             Spacer(modifier = Modifier.height(12.dp))
             HomePageTitle(title = "学术研究", titleEn = "Academic") {
-                navController?.navigate("$INFO_LIST/${InfoType.ACADEMIC}"){
-                    launchSingleTop
-                }
+                navToList.invoke(InfoType.ACADEMIC)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Box(modifier = Modifier.weight(1f)) {
@@ -135,10 +92,12 @@ fun InfoPage(
                     academicList = if (state.academicList.size > 1)
                         state.academicList.subList(1, state.academicList.size) else listOf(),
                     onClick = {
-                        navController?.navigate("$INFO_DETAIL/${state.academicList[it + 1].id}")
+                        if (state.academicList.isNotEmpty())
+                            navToInfoDetail.invoke(state.academicList[it + 1].id)
                     },
                     onClickTop = {
-                        navController?.navigate("$INFO_DETAIL/${state.academicList[0].id}")
+                        if (state.academicList.isNotEmpty())
+                            navToInfoDetail.invoke(state.academicList[0].id)
                     }
                 )
             }
@@ -149,5 +108,5 @@ fun InfoPage(
 @Composable
 @Preview(showBackground = true)
 private fun InfoPagePreview() {
-    InfoPage(navController = null, null)
+    InfoPage()
 }

@@ -35,6 +35,8 @@ fun popupSnackBar(
     onDismissCallback: () -> Unit = {}
 ) {
     scope.launch {
+        if (scaffoldState.drawerState.isOpen)
+            scaffoldState.drawerState.close()
         scaffoldState.snackbarHostState.showSnackbar(actionLabel = label, message = message)
         onDismissCallback.invoke()
     }

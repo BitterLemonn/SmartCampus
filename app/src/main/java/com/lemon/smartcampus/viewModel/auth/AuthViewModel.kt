@@ -1,5 +1,6 @@
 package com.lemon.smartcampus.viewModel.auth
 
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.smartcampus.data.database.database.GlobalDataBase
@@ -43,6 +44,8 @@ class AuthViewModel : ViewModel() {
                 loginWithPasswordLogic()
                 emit("登陆成功")
             }.onEach {
+                // 获取用户信息
+                getUserPost()
                 _viewEvents.setEvent(
                     AuthViewEvent.DismissLoadingDialog,
                     AuthViewEvent.TransIntent
@@ -81,6 +84,8 @@ class AuthViewModel : ViewModel() {
                 loginWithTokenLogic()
                 emit("登陆成功")
             }.onEach {
+                // 获取用户信息
+                getUserPost()
                 _viewEvents.setEvent(
                     AuthViewEvent.DismissLoadingDialog,
                     AuthViewEvent.TransIntent
@@ -118,6 +123,8 @@ class AuthViewModel : ViewModel() {
                 registerLogic()
                 emit("注册成功")
             }.onEach {
+                // 获取用户信息
+                getUserPost()
                 _viewEvents.setEvent(
                     AuthViewEvent.DismissLoadingDialog,
                     AuthViewEvent.TransIntent
@@ -227,6 +234,16 @@ class AuthViewModel : ViewModel() {
             is NetworkState.Success -> _viewEvents.setEvent(AuthViewEvent.ChangeSuccess)
             is NetworkState.Error -> throw result.e ?: Exception(result.msg)
         }
+    }
+
+    @WorkerThread
+    private fun getUserPost(){
+        val profile = GlobalDataBase.database.profileDao().get()
+        if (profile != null)
+            AppContext.profile = profile
+        val setting = GlobalDataBase.database.courseGlobalDao().get()
+        if (setting != null)
+            AppContext.courseGlobal = setting
     }
 }
 

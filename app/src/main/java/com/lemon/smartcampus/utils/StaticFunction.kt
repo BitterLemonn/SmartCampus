@@ -10,16 +10,14 @@ import android.os.FileUtils
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
+import androidx.annotation.WorkerThread
 import com.lemon.smartcampus.data.database.database.GlobalDataBase
 import com.lemon.smartcampus.data.globalData.AppContext
 import com.orhanobut.logger.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.lang.ref.Cleaner
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
@@ -161,11 +159,12 @@ fun saveBitmapToFile(file: File): File? {
     }
 }
 
-fun logoutLocal(scope: CoroutineScope) {
-    scope.launch(Dispatchers.IO) {
-        AppContext.profile = null
-        GlobalDataBase.database.profileDao().deleteAll()
-    }
+@WorkerThread
+suspend fun logoutLocal() {
+    AppContext.profile = null
+    GlobalDataBase.database.profileDao().deleteAll()
+    GlobalDataBase.database.resDao().deleteAll()
+    GlobalDataBase.database.topicDao().deleteAll()
 }
 
 fun charDay2CalendarDay(day: String): Int {
@@ -180,6 +179,7 @@ fun charDay2CalendarDay(day: String): Int {
         else -> Calendar.MONDAY
     }
 }
+
 fun indexToChar(num: Int): String {
     return when (num) {
         0 -> "一"

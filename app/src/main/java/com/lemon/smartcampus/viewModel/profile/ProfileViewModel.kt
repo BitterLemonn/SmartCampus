@@ -9,7 +9,6 @@ import com.lemon.smartcampus.data.repository.ProfileRepository
 import com.lemon.smartcampus.data.repository.TopicRepository
 import com.lemon.smartcampus.utils.MY_LIST_REFRESH_TIME
 import com.lemon.smartcampus.utils.NetworkState
-import com.lemon.smartcampus.utils.UnifiedExceptionHandler
 import com.lemon.smartcampus.utils.UnifiedExceptionHandler.LoginException
 import com.lemon.smartcampus.utils.logoutLocal
 import com.orhanobut.logger.Logger
@@ -210,66 +209,58 @@ class ProfileViewModel : ViewModel() {
     }
 
     private fun getUserPost() {
-        // 每5min刷新一次数据
-        if (!AppContext.profile?.id.isNullOrBlank()
-            && System.currentTimeMillis() - ((AppContext.profile?.refreshTime?.get(MY_LIST_REFRESH_TIME))
-                ?: 0L) > 5 * 60 * 1_000
-        )
-            viewModelScope.launch {
-                flow {
-                    getUserTopic()
-                    getUserRes()
-                    emit("获取成功")
-                }.onEach {
-                    AppContext.profile?.refreshTime?.let { it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis() }
-                    // 更新profile持久化
-                    GlobalDataBase.database.profileDao().deleteAll()
-                    GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
-                }.catch {
-                    Logger.d("logOut!!: $it")
-                    if (it is LoginException) {
-                        logoutLocal()
-                        _viewEvents.setEvent(ProfileViewEvent.Logout)
-                    }
-                    _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
-                }.flowOn(Dispatchers.IO).collect()
-            }
-        else {
-            viewModelScope.launch(Dispatchers.IO) {
-                _viewStates.setState {
-                    copy(
-                        topicList = GlobalDataBase.database.topicDao().getAll() ?: listOf(),
-                        resList = GlobalDataBase.database.resDao().getAll() ?: listOf()
-                    )
+        viewModelScope.launch {
+            flow {
+                getUserTopic()
+                getUserRes()
+                emit("获取成功")
+            }.onEach {
+                AppContext.profile?.refreshTime?.let {
+                    it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis()
                 }
-            }
+                // 更新profile持久化
+                GlobalDataBase.database.profileDao().deleteAll()
+                GlobalDataBase.database.profileDao().insert(AppContext.profile!!)
+            }.catch {
+                if (it is LoginException) {
+                    logoutLocal()
+                    _viewEvents.setEvent(ProfileViewEvent.Logout)
+                }
+                _viewEvents.setEvent(ProfileViewEvent.ShowToast(it.message!!))
+            }.flowOn(Dispatchers.IO).collect()
         }
     }
 
     private suspend fun getUserTopic() {
-        when (val result = repository.getUserTopic()) {
-            is NetworkState.Success -> {
-                _viewStates.setState { copy(topicList = result.data!!) }
-                AppContext.profile?.refreshTime?.let { it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis() }
-                // room持久化
-                GlobalDataBase.database.topicDao().deleteAll()
-                GlobalDataBase.database.topicDao().insertAll(viewStates.value.topicList)
+        if (!AppContext.profile?.id.isNullOrBlank())
+            when (val result = repository.getUserTopic()) {
+                is NetworkState.Success -> {
+                    _viewStates.setState { copy(topicList = result.data!!) }
+                    AppContext.profile?.refreshTime?.let {
+                        it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis()
+                    }
+                    // room持久化
+                    GlobalDataBase.database.topicDao().deleteAll()
+                    GlobalDataBase.database.topicDao().insertAll(viewStates.value.topicList)
+                }
+                is NetworkState.Error -> throw result.e ?: Exception(result.msg)
             }
-            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
-        }
     }
 
     private suspend fun getUserRes() {
-        when (val result = repository.getUserRes()) {
-            is NetworkState.Success -> {
-                _viewStates.setState { copy(resList = result.data!!) }
-                AppContext.profile?.refreshTime?.let { it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis() }
-                // room持久化
-                GlobalDataBase.database.resDao().deleteAll()
-                GlobalDataBase.database.resDao().insertAll(viewStates.value.resList)
+        if (!AppContext.profile?.id.isNullOrBlank())
+            when (val result = repository.getUserRes()) {
+                is NetworkState.Success -> {
+                    _viewStates.setState { copy(resList = result.data!!) }
+                    AppContext.profile?.refreshTime?.let {
+                        it[MY_LIST_REFRESH_TIME] = System.currentTimeMillis()
+                    }
+                    // room持久化
+                    GlobalDataBase.database.resDao().deleteAll()
+                    GlobalDataBase.database.resDao().insertAll(viewStates.value.resList)
+                }
+                is NetworkState.Error -> throw result.e ?: Exception(result.msg)
             }
-            is NetworkState.Error -> throw result.e ?: Exception(result.msg)
-        }
     }
 
     private fun delPost(topicId: String) {

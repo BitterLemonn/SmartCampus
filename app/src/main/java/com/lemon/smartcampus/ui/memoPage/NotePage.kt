@@ -98,11 +98,7 @@ fun NotePage(
                 )
             }
         },
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(enabled = isShowMore, interactionSource = remember {
-                MutableInteractionSource()
-            }, indication = null, onClick = { isShowMore = false }),
+        modifier = Modifier.fillMaxSize(),
         backgroundColor = AppTheme.colors.background
     ) {
         Row(
@@ -151,10 +147,7 @@ fun NotePage(
         )
     ) {
         Scaffold(modifier = Modifier
-            .fillMaxSize()
-            .clickable(enabled = isShowMore, interactionSource = remember {
-                MutableInteractionSource()
-            }, indication = null, onClick = { isShowMore = false }),
+            .fillMaxSize(),
             backgroundColor = AppTheme.colors.background,
             topBar = {
                 ToolBarMore(onMore = {

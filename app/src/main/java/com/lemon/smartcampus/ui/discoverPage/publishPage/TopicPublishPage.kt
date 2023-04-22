@@ -30,10 +30,10 @@ fun TopicPublishPage(
 
     Box(modifier = Modifier.fillMaxSize()) {
         TextField(
-            value = state.content,
+            value = state.topicContent,
             onValueChange = {
                 if (it.length <= 400) viewModel.dispatch(
-                    PublishViewAction.UpdateContent(it)
+                    PublishViewAction.UpdateTopicContent(it)
                 )
             },
             modifier = Modifier.fillMaxSize(),

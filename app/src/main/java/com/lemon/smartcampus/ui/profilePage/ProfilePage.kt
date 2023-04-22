@@ -466,10 +466,9 @@ fun ProfilePage(
         nickname = profile.nickname,
         tags = profile.tags,
         onChange = { nickname, tagString ->
-            val tags =
+            var tags =
                 tagString.split("(\\s)+".toRegex()).toSet().toList().filter { it.isNotBlank() }
-                    .subList(0, 2)
-            Logger.d("nickname: $nickname, tags: $tags")
+            if (tags.size > 2) tags = tags.subList(0, 2)
             if (nickname != profile.nickname)
                 viewModel.dispatch(ProfileViewAction.ChangeNickname(nickname))
             if (tags != profile.tags) {
@@ -482,7 +481,7 @@ fun ProfilePage(
 @Preview(showBackground = true, backgroundColor = 0xFFFAFAFA)
 private fun ProfilePagePreview() {
     ProfilePage(
-        showToast = {_,_->},
+        showToast = { _, _ -> },
         navToAuth = {},
         navToCourse = {},
         navToPublish = {},

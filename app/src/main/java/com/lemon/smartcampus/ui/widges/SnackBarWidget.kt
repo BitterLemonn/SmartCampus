@@ -3,6 +3,7 @@ package com.lemon.smartcampus.ui.widges
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarData
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
 import com.lemon.smartcampus.ui.theme.AppTheme
 import kotlinx.coroutines.CoroutineScope
@@ -37,8 +38,11 @@ fun popupSnackBar(
     scope.launch {
         if (scaffoldState.drawerState.isOpen)
             scaffoldState.drawerState.close()
-        scaffoldState.snackbarHostState.showSnackbar(actionLabel = label, message = message)
+        scaffoldState.snackbarHostState.showSnackbar(
+            actionLabel = label,
+            message = message,
+            duration = SnackbarDuration.Short
+        )
         onDismissCallback.invoke()
     }
-
 }

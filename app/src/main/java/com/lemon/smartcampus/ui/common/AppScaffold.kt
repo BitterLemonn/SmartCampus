@@ -43,6 +43,7 @@ import com.lemon.smartcampus.ui.toolBtnPage.characterPage.CharacterDetailPage
 import com.lemon.smartcampus.ui.widges.AppSnackBar
 import com.lemon.smartcampus.ui.widges.popupSnackBar
 import com.lemon.smartcampus.utils.*
+import com.orhanobut.logger.Logger
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -62,8 +63,10 @@ fun AppScaffold() {
     fun navToIntro() = navController.navigate(INTRO_PAGE) { launchSingleTop }
     fun navToCalendarPage() = navController.navigate(CALENDAR_PAGE) { launchSingleTop }
     fun navToCharacterPage() = navController.navigate(CHARACTER_PAGE) { launchSingleTop }
-    fun navToCharacterDetailPage(name: String, content: String, imgUrl: String) =
-        navController.navigate("CHARACTER_DETAIL_PAGE/$name/$content/$imgUrl")
+    fun navToCharacterDetailPage(name: String, content: String, imgUrl: String) {
+        val newImgUrl = imgUrl.replace("/", "　")
+        navController.navigate("$CHARACTER_DETAIL_PAGE/$name/$newImgUrl?content=$content") { launchSingleTop }
+    }
 
     fun navToHome() = navController.navigate(HOME_PAGE) { launchSingleTop }
     fun navToPublish() = navController.navigate(PUBLISH_PAGE) { launchSingleTop }
@@ -143,7 +146,7 @@ fun AppScaffold() {
             }
             composable(route = CHARACTER_PAGE) {
                 rememberSystemUiController().setSystemBarsColor(
-                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
                 )
                 CharacterPage(showToast = { msg, flag -> showToast(msg, flag) },
                     onBack = { onBack() },
@@ -156,26 +159,37 @@ fun AppScaffold() {
                     })
             }
             composable(
-                route = "$CHARACTER_DETAIL_PAGE/{name}/{content}/{imgUrl}",
+                route = "$CHARACTER_DETAIL_PAGE/{name}/{imgUrl}?content={content}",
                 arguments = listOf(
-                    navArgument("name") { type = NavType.StringType },
-                    navArgument("content") { type = NavType.StringType },
-                    navArgument("imgUrl") { type = NavType.StringType }),
+                    navArgument("name") { defaultValue = "" },
+                    navArgument("content") {
+                        defaultValue = ""
+                        nullable = true
+                    },
+                    navArgument("imgUrl") { defaultValue = "" }
+                ),
             ) {
                 rememberSystemUiController().setSystemBarsColor(
-                    AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
+                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
                 )
                 val argument = it.arguments
                 val name = argument?.getString("name") ?: ""
                 val content = argument?.getString("content") ?: ""
-                val imgUrl = argument?.getString("imgUrl") ?: ""
+                val imgUrl = (argument?.getString("imgUrl") ?: "").replace("　", "/")
+                Logger.d("imgUrl: $imgUrl")
                 CharacterDetailPage(name = name, content = content, imgUrl = imgUrl)
+            }
+            composable(route = CHARACTER_DETAIL_PAGE) {
+                rememberSystemUiController().setSystemBarsColor(
+                    AppTheme.colors.background, darkIcons = !isSystemInDarkTheme()
+                )
+                CharacterDetailPage(name = "name", content = "content", imgUrl = "imgUrl")
             }
             composable(route = AUTH_PAGE) {
                 rememberSystemUiController().setSystemBarsColor(
                     AppTheme.colors.background, darkIcons = isSystemInDarkTheme()
                 )
-                AuthPage(scaffoldState = scaffoldState, onBack = { onBack() })
+                AuthPage(showToast = { msg, flag -> showToast(msg, flag) }, onBack = { onBack() })
             }
             composable(route = PUBLISH_PAGE, enterTransition = {
                 expandIn(

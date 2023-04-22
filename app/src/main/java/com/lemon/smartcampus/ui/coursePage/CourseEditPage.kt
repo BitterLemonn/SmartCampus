@@ -69,13 +69,13 @@ fun CourseEditPage(
     var endME by remember { mutableStateOf(0) }
 
     LaunchedEffect(key1 = Unit) {
-        // TODO 开发警告
-        scaffoldState?.let {
-            popupSnackBar(
-                scope, scaffoldState, SNACK_WARN,
-                "!!!注意!!!该功能正在开发或者测试当中"
-            )
-        }
+//        // TODO 开发警告
+//        scaffoldState?.let {
+//            popupSnackBar(
+//                scope, scaffoldState, SNACK_WARN,
+//                "!!!注意!!!该功能正在开发或者测试当中"
+//            )
+//        }
         // 读取编辑ID
         if (!courseID.isNullOrBlank()) {
             scope.launch(Dispatchers.IO) {

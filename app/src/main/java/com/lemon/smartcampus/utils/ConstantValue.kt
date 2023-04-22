@@ -37,7 +37,7 @@ object JsonConverter {
         // 忽略实体类空值
         explicitNulls = false
         // 不编码默认值
-        encodeDefaults = false
+        encodeDefaults = true
         // 忽略json空值
         coerceInputValues = true
     }

@@ -1,9 +1,9 @@
 package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.lemon.smartcampus.data.common.CharacterUrl
-import com.lemon.smartcampus.data.common.CommonInterceptor
+import com.lemon.smartcampus.data.common.*
 import com.lemon.smartcampus.data.database.entities.CharacterEntity
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -30,7 +30,7 @@ interface CharacterApi {
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(CharacterUrl)
+                .baseUrl(if (AppContext.publicUrl.isBlank()) CharacterUrl else "${AppContext.publicUrl}$CharacterContent")
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )

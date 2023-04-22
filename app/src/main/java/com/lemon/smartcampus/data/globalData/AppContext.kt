@@ -21,4 +21,5 @@ object AppContext {
         )
     var topicDetail: Map<String, TopicEntity> = mapOf()
     var downloadedFile: Map<String, String> = mapOf()
+    var publicUrl: String = ""
 }

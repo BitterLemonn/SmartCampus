@@ -2,13 +2,14 @@ package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lemon.smartcampus.data.common.CommonInterceptor
+import com.lemon.smartcampus.data.common.UserContent
 import com.lemon.smartcampus.data.common.UserUrl
 import com.lemon.smartcampus.data.database.entities.ProfileEntity
 import com.lemon.smartcampus.data.database.networkEntities.*
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -89,7 +90,7 @@ interface UserApi {
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(UserUrl)
+                .baseUrl(if (AppContext.publicUrl.isBlank()) UserUrl else "${AppContext.publicUrl}$UserContent")
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )

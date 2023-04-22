@@ -1,12 +1,11 @@
 package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.lemon.smartcampus.data.common.CommonInterceptor
-import com.lemon.smartcampus.data.common.TokenUrl
+import com.lemon.smartcampus.data.common.*
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -32,7 +31,7 @@ interface TokenApi {
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(TokenUrl)
+                .baseUrl(if (AppContext.publicUrl.isBlank()) TokenUrl else "${AppContext.publicUrl}$TokenContent")
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )

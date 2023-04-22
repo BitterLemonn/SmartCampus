@@ -2,16 +2,17 @@ package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lemon.smartcampus.data.common.CommonInterceptor
+import com.lemon.smartcampus.data.common.TopicContent
 import com.lemon.smartcampus.data.common.TopicUrl
 import com.lemon.smartcampus.data.database.entities.TopicEntity
 import com.lemon.smartcampus.data.database.networkEntities.CommentResponseEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicCommentEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicPublishEntity
 import com.lemon.smartcampus.data.database.networkEntities.TopicResponseEntity
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -85,7 +86,7 @@ interface TopicApi {
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(TopicUrl)
+                .baseUrl(if (AppContext.publicUrl.isBlank()) TopicUrl else "${AppContext.publicUrl}$TopicContent")
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )

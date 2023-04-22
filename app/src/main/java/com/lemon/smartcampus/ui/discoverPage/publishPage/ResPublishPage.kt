@@ -25,10 +25,10 @@ fun ResPublishPage(
     val state by viewModel.viewStates.collectAsState()
 
     TextField(
-        value = state.content,
+        value = state.resContent,
         onValueChange = {
             if (it.length <= 400) viewModel.dispatch(
-                PublishViewAction.UpdateContent(it)
+                PublishViewAction.UpdateResContent(it)
             )
         },
         modifier = Modifier

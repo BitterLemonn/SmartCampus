@@ -1,15 +1,14 @@
 package com.lemon.smartcampus.data.api
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.lemon.smartcampus.data.common.CommonInterceptor
-import com.lemon.smartcampus.data.common.InfoUrl
+import com.lemon.smartcampus.data.common.*
 import com.lemon.smartcampus.data.database.entities.AcademicEntity
 import com.lemon.smartcampus.data.database.entities.InfoEntity
 import com.lemon.smartcampus.data.database.entities.NewsEntity
+import com.lemon.smartcampus.data.globalData.AppContext
 import com.lemon.smartcampus.utils.JsonConverter
 import com.lemon.smartcampus.utils.ResponseData
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -46,7 +45,7 @@ interface InfoApi {
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
-                .baseUrl(InfoUrl)
+                .baseUrl(if (AppContext.publicUrl.isBlank()) InfoUrl else "${AppContext.publicUrl}$InfoContent")
                 .addConverterFactory(
                     JsonConverter.Json.asConverterFactory(contentType = "application/json".toMediaType())
                 )

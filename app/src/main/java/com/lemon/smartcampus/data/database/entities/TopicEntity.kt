@@ -28,6 +28,7 @@ data class TopicEntity(
     @ColumnInfo val resourceSize: Float = 0f,
     @ColumnInfo val resourceLink: String = "",
     @ColumnInfo val hasRes: Boolean = resourceSize > 0f,
+    @ColumnInfo var isCached: Boolean = false
 ) : Parcelable
 
 @Serializable

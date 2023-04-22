@@ -62,15 +62,15 @@ fun CoursePage(
     val reComposeAlpha by animateFloatAsState(targetValue = if (reCompose) 0.99f else 1f)
     val animateHeight by animateDpAsState(targetValue = if (expand) 100.dp else 50.dp)
     LaunchedEffect(key1 = Unit) {
-        // TODO 开发警告
-        scaffoldState?.let {
-            popupSnackBar(
-                scope,
-                scaffoldState,
-                SNACK_WARN,
-                "!!!注意!!!该功能正在开发或者测试当中"
-            )
-        }
+//        // TODO 开发警告
+//        scaffoldState?.let {
+//            popupSnackBar(
+//                scope,
+//                scaffoldState,
+//                SNACK_WARN,
+//                "!!!注意!!!该功能正在开发或者测试当中"
+//            )
+//        }
         viewModel.dispatch(CourseViewAction.GetOneDayCourse)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { events ->
             when (events) {

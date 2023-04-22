@@ -47,21 +47,6 @@ import java.io.File
 
 val tabList = listOf("话题", "资源")
 
-private object PageList {
-    private var pageList: List<@Composable () -> Unit> = listOf()
-    fun getPage(
-        index: Int,
-        scaffoldState: ScaffoldState?,
-        viewModel: PublishViewModel
-    ): @Composable () -> Unit {
-        if (pageList.isEmpty()) pageList = listOf(
-            { TopicPublishPage(scaffoldState = scaffoldState, viewModel = viewModel) },
-            { ResPublishPage(scaffoldState = scaffoldState, viewModel = viewModel) },
-        )
-        return pageList[index]
-    }
-}
-
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun PublishPage(
@@ -70,6 +55,10 @@ fun PublishPage(
     onBack: () -> Unit,
     navToAuth: () -> Unit
 ) {
+    val pageList = listOf<@Composable () -> Unit>(
+        { TopicPublishPage(scaffoldState = scaffoldState, viewModel = viewModel) },
+        { ResPublishPage(scaffoldState = scaffoldState, viewModel = viewModel) },
+    )
     var topicMode by remember { mutableStateOf(true) }
     var nowSelect by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(false) }
@@ -117,7 +106,7 @@ fun PublishPage(
 
     DisposableEffect(key1 = Unit) {
         onDispose {
-            viewModel.dispatch(PublishViewAction.UpdateContent(""))
+            viewModel.dispatch(PublishViewAction.UpdateTopicContent(""))
             viewModel.dispatch(PublishViewAction.UpdateTags(listOf()))
         }
     }
@@ -132,9 +121,6 @@ fun PublishPage(
         scope.launch { pageState.animateScrollToPage(nowSelect) }
         imeController?.hide()
         topicMode = nowSelect == 0
-    }
-    LaunchedEffect(key1 = WindowInsets.ime) {
-        Logger.d("change")
     }
 
     val launcher =
@@ -159,12 +145,11 @@ fun PublishPage(
                         interactionSource = MutableInteractionSource(),
                         onClick = {
                             val tags = Regex("#.*?#")
-                                .findAll(state.content)
+                                .findAll(if (nowSelect == 0) state.topicContent else state.resContent)
                                 .map { it.value.replace("#", "") }
                                 .filter { it.isNotBlank() && it.length <= 4 }
                                 .toSet()
                                 .toList()
-                            Logger.d("content: ${state.content}")
                             viewModel.dispatch(
                                 PublishViewAction.UpdateTags(
                                     if (tags.size > 3) tags.subList(0, 3) else tags
@@ -254,9 +239,7 @@ fun PublishPage(
                     .fillMaxSize()
                     .padding(padding),
                 state = pageState
-            ) {
-                PageList.getPage(it, scaffoldState, viewModel).invoke()
-            }
+            ) { pageList[it].invoke() }
         }
     }
     if (loading) WarpLoadingDialog()

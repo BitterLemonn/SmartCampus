@@ -43,6 +43,8 @@ abstract class AppDataBase : RoomDatabase() {
 
     abstract fun courseDao(): CourseDao
 
+    abstract fun cachedPostDao(): CachedPostDao
+
     abstract fun courseGlobalDao(): CourseGlobalDao
 
     abstract fun infoDao(): InfoDao
